@@ -178,7 +178,8 @@ presnost = {"smluv": len(_zz), "pasmo": sum(1 for a, b in _zz if _pasmo(a) == _p
 
 DATA = {
     "meta": {"sestaveno": date.today().isoformat(), "mesto": MESTO, "prah_mesto": PRAH_MESTO, "rok_do": ROK_DO,
-             "s_detailem": not BEZ_DETAILU, "presnost": presnost, "zdroj": "api" if "api" in KOHORTA else "exporty", "mesice_exportu": sorted(Path(f).name[3:10] for f in glob.glob(str(KOREN / "data/rs/*.stat.json")))},
+             "s_detailem": not BEZ_DETAILU, "presnost": presnost, "zdroj": "api" if "api" in KOHORTA else "exporty",
+             "mest_v_datech": len({r["mesto_ico"] for r in K}), "mest_celkem": sum(1 for o in OBCE.values() if o.get("kategorie") in KATEGORIE), "mesice_exportu": sorted(Path(f).name[3:10] for f in glob.glob(str(KOREN / "data/rs/*.stat.json")))},
     "vzorek": vzorek, "vz": vz, "mesto": mesto, "duvody": duvody, "druhy": SEZNAM_DRUHU, "povahy": SEZNAM_POVAH,
     "cr": cr, "kraje": kraje, "mesta": mesta, "kategorie": KATEGORIE, "pokryti": pokryti, "zdroje": ZDROJE, "pasma_mest": PASMA_MEST,
     "registr": dict(S),

@@ -371,11 +371,11 @@ function razeni(el, radky) {
   const STR = 50, roky = [...new Set(R.map(r => r.rok))].sort(), v = D.vzorek.celek, pr = D.meta.presnost, pk = D.pokryti['obec II. typu'];
   let strana = 0;
   $('k-var').innerHTML = D.meta.zdroj === 'api'
-    ? `<b>Čísla jen z vyplněných polí registru, bez čtení dodatků.</b> Data: API Hlídače státu, stavební smlouvy nad 1 mil. Kč s DPH podepsané od roku ${Math.min(...roky)}, sběr ${D.meta.sestaveno.split('-').reverse().map(Number).join('. ')}. `
+    ? (D.meta.mest_v_datech < D.meta.mest_celkem * 0.9 ? `<b>Sběr dat ještě běží: zatím ${D.meta.mest_v_datech} z ${D.meta.mest_celkem} měst.</b> Průměry „všech měst“ se proto budou měnit. ` : '') + `<b>Čísla jen z vyplněných polí registru, bez čtení dodatků.</b> Data: API Hlídače státu, stavební smlouvy nad 1 mil. Kč s DPH podepsané od roku ${Math.min(...roky)}, sběr ${D.meta.sestaveno.split('-').reverse().map(Number).join('. ')}. `
       + `Na ${pr.smluv} smlouvách s cenou ověřenou z textu trefila tato metoda pásmo změny u ${cs(pr.pasmo / pr.smluv * 100, 0)} % a našla ${pr.najde20} z ${pr.skut20} nárůstů nad 20 %. `
       + `Co neumí: hodnota dodatku nemá znaménko (zlevnění se může tvářit jako zdražení); dodatek chybně přiložený k původní smlouvě místo vlastního záznamu v polích není; `
       + `a když město přepíše cenu původního záznamu, vychází změna menší. Poslední ročník ještě není uzavřený. Proto je dole tabulka s odkazy – každé číslo si lze ověřit. `
-      + `Obce II. typu smlouvy uveřejňovat nemusí: v datech je ${pk.smluv} smluv z ${pk.mest} obcí ze ${pk.mest_celkem}.`
+      + (D.meta.mest_v_datech < D.meta.mest_celkem * 0.9 ? '' : `Obce II. typu smlouvy uveřejňovat nemusí: v datech je ${pk.smluv} smluv z ${pk.mest} obcí ze ${pk.mest_celkem}.`)
     : `<b>Čísla jen z vyplněných polí registru, bez čtení dodatků.</b> Zatím z ${D.meta.mesice_exportu.length} stažených měsíců, takže většina dodatků chybí: `
       + `ve vzorku výše mělo dodatek ${v.s_dodatkem} smluv, tady je vidět u ${D.vzorek.lehka_videla}. `
       + `Na ${pr.smluv} smlouvách s cenou ověřenou z textu trefila tato metoda pásmo změny u ${cs(pr.pasmo / pr.smluv * 100, 0)} % a našla ${pr.najde20} z ${pr.skut20} nárůstů nad 20 %. `
