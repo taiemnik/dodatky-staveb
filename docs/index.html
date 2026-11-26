@@ -126,6 +126,12 @@ footer{color:var(--text-muted);font-size:12px;margin-top:24px}
 <section class="sekce" id="kohorta">
   <h2>Česko: smlouvy měst z metadat registru</h2>
   <div class="varovani" id="k-var"></div>
+  <div class="graf" style="margin:14px 0 6px">
+    <h3>Moje město proti průměrům</h3>
+    <div class="filtry"><label>Moje město<input id="k-moje" list="k-mesta" placeholder="začněte psát název…" style="font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--surface-1);color:var(--text-primary);width:210px"></label></div>
+    <div id="k-moje-vystup"></div>
+  </div>
+  <h3 style="margin-top:18px">Všechna města – filtry</h3>
   <div class="filtry">
     <label>Rok podpisu<select id="k-rok"><option value="">všechny</option></select></label>
     <label>Typ města<select id="k-kat"><option value="">všechny</option></select></label>
@@ -147,7 +153,7 @@ footer{color:var(--text-muted);font-size:12px;margin-top:24px}
   <div class="graf" style="margin-top:16px"><h3>Procenta proti korunám: každá tečka je smlouva se změnou ceny</h3>
     <div class="posuv"><div id="k-bod" style="min-width:700px"></div></div>
     <div class="legenda"><span><i style="background:var(--t1);border-radius:50%"></i>do 20 %</span><span><i style="background:var(--t2);border-radius:50%"></i>20–30 % (anomálie)</span><span><i style="background:var(--t3);border-radius:50%"></i>30 % a víc (abnormální)</span><span>křivka = nárůst o korunový práh</span></div>
-    <p class="pozn">Vodorovně původní cena (každý dílek je desetinásobek), svisle změna ceny. Nad křivkou je nárůst větší než korunový práh. Smlouvy beze změny v grafu nejsou. Kliknutím se otevře záznam v registru.</p></div>
+    <p class="pozn">Vodorovně původní cena (každý dílek je desetinásobek), svisle změna ceny. Nad křivkou je nárůst větší než korunový práh. Smlouvy beze změny v grafu nejsou. Kliknutím se otevře záznam smlouvy na Hlídači státu.</p></div>
 
   <h3 style="margin-top:18px">Smlouvy ke kontrole</h3>
   <p class="pozn" id="k-tab-pozn"></p>
@@ -364,11 +370,16 @@ function razeni(el, radky) {
   const PAS = [['1–2 mil. Kč', 1e6, 2e6], ['2–5 mil. Kč', 2e6, 5e6], ['5–20 mil. Kč', 5e6, 2e7], ['20–50 mil. Kč', 2e7, 5e7], ['50 mil. Kč a víc', 5e7, 1e15]];
   const STR = 50, roky = [...new Set(R.map(r => r.rok))].sort(), v = D.vzorek.celek, pr = D.meta.presnost, pk = D.pokryti['obec II. typu'];
   let strana = 0;
-  $('k-var').innerHTML = `<b>Čísla jen z vyplněných polí registru, bez čtení dodatků.</b> Zatím z ${D.meta.mesice_exportu.length} stažených měsíců, takže většina dodatků chybí: `
-    + `ve vzorku výše mělo dodatek ${v.s_dodatkem} smluv, tady je vidět u ${D.vzorek.lehka_videla}. `
-    + `Na ${pr.smluv} smlouvách s cenou ověřenou z textu trefila tato metoda pásmo změny u ${cs(pr.pasmo / pr.smluv * 100, 0)} % a našla ${pr.najde20} z ${pr.skut20} nárůstů nad 20 %. `
-    + `Neumí znaménko (zlevnění se může tvářit jako zdražení) a nevidí cenu u dodatku přiloženého k původnímu záznamu – proto je dole tabulka s odkazy do registru. `
-    + `Obce II. typu smlouvy uveřejňovat nemusí: v datech je ${pk.smluv} smluv z ${pk.mest} obcí ze ${pk.mest_celkem}.`;
+  $('k-var').innerHTML = D.meta.zdroj === 'api'
+    ? `<b>Čísla jen z vyplněných polí registru, bez čtení dodatků.</b> Data: API Hlídače státu, stavební smlouvy nad 1 mil. Kč s DPH podepsané od roku ${Math.min(...roky)}, sběr ${D.meta.sestaveno.split('-').reverse().map(Number).join('. ')}. `
+      + `Na ${pr.smluv} smlouvách s cenou ověřenou z textu trefila tato metoda pásmo změny u ${cs(pr.pasmo / pr.smluv * 100, 0)} % a našla ${pr.najde20} z ${pr.skut20} nárůstů nad 20 %. `
+      + `Co neumí: hodnota dodatku nemá znaménko (zlevnění se může tvářit jako zdražení); dodatek chybně přiložený k původní smlouvě místo vlastního záznamu v polích není; `
+      + `a když město přepíše cenu původního záznamu, vychází změna menší. Poslední ročník ještě není uzavřený. Proto je dole tabulka s odkazy – každé číslo si lze ověřit. `
+      + `Obce II. typu smlouvy uveřejňovat nemusí: v datech je ${pk.smluv} smluv z ${pk.mest} obcí ze ${pk.mest_celkem}.`
+    : `<b>Čísla jen z vyplněných polí registru, bez čtení dodatků.</b> Zatím z ${D.meta.mesice_exportu.length} stažených měsíců, takže většina dodatků chybí: `
+      + `ve vzorku výše mělo dodatek ${v.s_dodatkem} smluv, tady je vidět u ${D.vzorek.lehka_videla}. `
+      + `Na ${pr.smluv} smlouvách s cenou ověřenou z textu trefila tato metoda pásmo změny u ${cs(pr.pasmo / pr.smluv * 100, 0)} % a našla ${pr.najde20} z ${pr.skut20} nárůstů nad 20 %. `
+      + `Obce II. typu smlouvy uveřejňovat nemusí: v datech je ${pk.smluv} smluv z ${pk.mest} obcí ze ${pk.mest_celkem}.`;
   const volby = (el, seznam, pripona = '') => $(el).insertAdjacentHTML('beforeend', seznam.map((n, i) => `<option value="${i}">${esc(n)}${pripona}</option>`).join(''));
   $('k-rok').insertAdjacentHTML('beforeend', roky.map(r => `<option>${r}</option>`).join(''));
   volby('k-kat', D.kategorie); volby('k-kraj', D.kraje); volby('k-mesto', D.pasma_mest, ' obyvatel'); volby('k-druh', D.druhy); volby('k-povaha', D.povahy);
@@ -405,9 +416,39 @@ function razeni(el, radky) {
       + `<text class="hodnota" x="${W - P - 8}" y="${y(11)}" text-anchor="end">malé procento, hodně korun</text>`;
     pts.forEach(r => {
       const t = r.z >= 30 ? 3 : r.z >= 20 ? 2 : 1, tip = `${r.mesto} (${r.rok})\n${r.p}\n${mil(r.b)} → ${mil(r.b + r.kc)} (${pct(r.z)}, ${r.kc >= 0 ? '+' : '−'}${mil(Math.abs(r.kc))})\ndodatků ${r.d}`;
-      s += `<a href="https://smlouvy.gov.cz/smlouva/${r.idv}" target="_blank" rel="noopener"><circle cx="${x(r.b).toFixed(1)}" cy="${y(r.z).toFixed(1)}" r="4.5" fill="var(--t${t})" stroke="var(--surface-1)" stroke-width="1.5" data-tip="${esc(tip)}"/></a>`;
+      s += `<a href="https://www.hlidacstatu.cz/Detail/${r.idv}" target="_blank" rel="noopener"><circle cx="${x(r.b).toFixed(1)}" cy="${y(r.z).toFixed(1)}" r="4.5" fill="var(--t${t})" stroke="var(--surface-1)" stroke-width="1.5" data-tip="${esc(tip)}"/></a>`;
     });
     el.innerHTML = s + '</svg>';
+  }
+  // --- Moje město proti průměrům: stejné filtry roku, ceny a typu stavby pro město i pro srovnávací skupiny ---
+  function souhrn(rr, prah) {
+    const zn = rr.filter(r => r.z != null), n = zn.length, z = zn.map(r => r.z), zm = z.filter(x => Math.abs(x) > 0.005), c = f => zn.filter(f).length;
+    return {vse: rr.length, n, dod: rr.length ? rr.filter(r => r.d > 0).length / rr.length * 100 : null, prumer: prumer(z), med: kvantil(zm, .5),
+      p10: n ? c(r => r.z >= 10) / n * 100 : null, p20: n ? c(r => r.z >= 20) / n * 100 : null, p30: n ? c(r => r.z >= 30) / n * 100 : null,
+      pk: n ? c(r => r.kc >= prah) / n * 100 : null, kor: n ? (zn.reduce((a, r) => a + r.b + r.kc, 0) / zn.reduce((a, r) => a + r.b, 0) - 1) * 100 : null};
+  }
+  function moje(prah) {
+    const el = $('k-moje-vystup'), jm = $('k-moje').value.trim().toLowerCase(), g = id => $(id).value;
+    if (!jm) { el.innerHTML = '<p class="pozn">Vyberte město – ukáže se vedle průměru stejně velkých měst, stejného typu úřadu, kraje a celé republiky. Platí filtry roku, ceny, druhu stavby a povahy prací nastavené níže.</p>'; return; }
+    const [ca, cb] = (g('k-cena') || '0-9999999').split('-').map(Number);
+    // společný základ: bez filtrů území (ty určují srovnávací skupiny)
+    const zaklad = R.filter(r => (g('k-rok') === '' || r.rok == g('k-rok')) && r.b >= ca * 1e6 && r.b < cb * 1e6 && (g('k-druh') === '' || r.druh == g('k-druh')) && (g('k-povaha') === '' || r.povaha == g('k-povaha')));
+    const nazev = D.mesta.find(m => m.toLowerCase() === jm) || D.mesta.find(m => m.toLowerCase().startsWith(jm));
+    const m = nazev ? R.find(r => r.mesto === nazev) : null;
+    if (!m) { el.innerHTML = '<p class="pozn">Takové město v datech není.</p>'; return; }
+    const sk = [[nazev, r => r.mesto === nazev], [`města ${D.pasma_mest[m.obyv]} obyvatel`, r => r.obyv === m.obyv], [D.kategorie[m.kat], r => r.kat === m.kat],
+      [D.kraje[m.kraj], r => r.kraj === m.kraj], ['všechna města', () => true]].map(([n, f]) => [n, souhrn(zaklad.filter(f), prah)]);
+    const radky = [['Smluv (se známou cenou)', s => `${s.vse} (${s.n})`], ['Má dodatek', s => s.dod == null ? '–' : cs(s.dod, 0) + ' %'], ['Průměrná změna ceny', s => pct(s.prumer)],
+      ['Typická změna, když se cena změní (medián)', s => pct(s.med)], ['Šance na nárůst 10 % a víc', s => s.p10 == null ? '–' : cs(s.p10, 1) + ' %'],
+      ['Šance na anomálii (20 % a víc)', s => s.p20 == null ? '–' : cs(s.p20, 1) + ' %'], ['Šance na abnormální nárůst (30 % a víc)', s => s.p30 == null ? '–' : cs(s.p30, 1) + ' %'],
+      [`Nárůst o ${cs(prah / 1e6, 1)} mil. Kč a víc`, s => s.pk == null ? '–' : cs(s.pk, 1) + ' %'], ['Korunově', s => pct(s.kor)]];
+    const moje0 = sk[0][1];
+    el.innerHTML = (moje0.n < 15 ? `<div class="varovani">${esc(nazev)} má po filtrech jen ${moje0.n} smluv se známou cenou. Jedna stavba pohne procenty o několik bodů – berte to jako orientaci, ne jako výsledek.</div>` : '')
+      + '<div class="tab" style="max-height:none"><table><tr><th>Ukazatel</th>' + sk.map(([n], i) => `<th class="c">${i ? esc(n) : '<b>' + esc(n) + '</b>'}</th>`).join('') + '</tr>'
+      + radky.map(([n, f]) => `<tr><td>${n}</td>` + sk.map(([, s], i) => `<td class="c">${i ? f(s) : '<b>' + f(s) + '</b>'}</td>`).join('') + '</tr>').join('') + '</table></div>'
+      + '<div class="grafy"><div class="graf"><h3>Šance na anomálii (nárůst 20 % a víc)</h3><div id="k-moje-g1"></div></div><div class="graf"><h3>Průměrná změna ceny</h3><div id="k-moje-g2"></div></div></div>';
+    pruhy($('k-moje-g1'), sk.map(([n, s]) => ({nazev: n.length > 24 ? n.slice(0, 23) + '…' : n, hodnota: s.p20, pozn: `n = ${s.n}`, tip: `${n}\n${cs(s.p20, 1)} % z ${s.n} smluv se známou cenou`})), {d: 1});
+    pruhy($('k-moje-g2'), sk.map(([n, s]) => ({nazev: n.length > 24 ? n.slice(0, 23) + '…' : n, hodnota: s.prumer, pozn: `n = ${s.n}`, tip: `${n}\nprůměr ${pct(s.prumer)} z ${s.n} smluv`})), {d: 1, znam: true});
   }
   function kresli(zachovatStranu) {
     if (!zachovatStranu) strana = 0;
@@ -428,18 +469,20 @@ function razeni(el, radky) {
       + `<th class="c">o ${cs(prah / 1e6, 1)} mil. Kč a víc</th><th class="c">Drobné rozšíření</th><th class="c">Tichý nárůst</th><th class="c">Zásadní</th></tr>`
       + sance('Celkem', vse, prah) + sk.map(([nz, f]) => [nz, vse.filter(f)]).filter(([, rr]) => rr.length).map(([nz, rr]) => sance(nz, rr, prah)).join('');
     body($('k-bod'), zn, prah);
+    moje(prah);
     // tabulka smluv ke kontrole: nejvyšší nárůst nahoře, neznámá cena na konci
     const tab = [...vse].sort((a, b) => (b.z ?? -1e9) - (a.z ?? -1e9)), stran = Math.max(1, Math.ceil(tab.length / STR));
     strana = Math.min(strana, stran - 1);
-    $('k-tab-pozn').textContent = `${tab.length.toLocaleString('cs-CZ')} smluv podle filtrů výše, řazeno od největšího nárůstu. Odkaz vede na záznam v Registru smluv, kde jsou smlouva i dodatky.`;
-    $('k-tab').innerHTML = '<tr><th>Registr</th><th>Město</th><th>Smlouva</th><th class="c">Rok</th><th class="c">Dodatků</th><th class="c">Původní cena</th><th class="c">Konečná cena</th><th class="c">Změna</th><th>Jak je cena zjištěna</th></tr>'
-      + tab.slice(strana * STR, (strana + 1) * STR).map(r => `<tr><td><a href="https://smlouvy.gov.cz/smlouva/${r.idv}" target="_blank" rel="noopener">${r.idv}</a></td><td>${esc(r.mesto)}</td><td>${esc(r.p)}</td>`
+    $('k-tab-pozn').innerHTML = `${tab.length.toLocaleString('cs-CZ')} smluv podle filtrů výše, řazeno od největšího nárůstu. Zdroj: <a href="https://www.hlidacstatu.cz" target="_blank" rel="noopener">Hlídač státu</a>, vlastní výpočet; u každé smlouvy odkaz na její záznam na Hlídači státu a v Registru smluv, kde jsou smlouva i dodatky.`;
+    $('k-tab').innerHTML = '<tr><th>Zdroj záznamu</th><th>Město</th><th>Smlouva</th><th class="c">Rok</th><th class="c">Dodatků</th><th class="c">Původní cena</th><th class="c">Konečná cena</th><th class="c">Změna</th><th>Jak je cena zjištěna</th></tr>'
+      + tab.slice(strana * STR, (strana + 1) * STR).map(r => `<tr><td><a href="https://www.hlidacstatu.cz/Detail/${r.idv}" target="_blank" rel="noopener">Hlídač státu</a> · <a href="https://smlouvy.gov.cz/smlouva/${r.idv}" target="_blank" rel="noopener">registr</a></td><td>${esc(r.mesto)}</td><td>${esc(r.p)}</td>`
         + `<td class="c">${r.rok}</td><td class="c">${r.d}</td><td class="c">${mil(r.b)}</td><td class="c">${r.z == null ? 'neznámá' : mil(r.b + r.kc)}</td><td class="c">${r.z == null ? '?' : pct(r.z)}</td><td>${esc(D.zdroje[r.zdroj])}</td></tr>`).join('');
     $('k-str').textContent = `strana ${strana + 1} z ${stran}`;
     $('k-pred').disabled = strana === 0; $('k-dal').disabled = strana >= stran - 1;
   }
   ['k-rok', 'k-kat', 'k-kraj', 'k-mesto', 'k-cena', 'k-druh', 'k-povaha', 'k-zmena', 'k-prah', 'k-clen'].forEach(i => $(i).addEventListener('change', () => kresli()));
   $('k-jmeno').addEventListener('input', () => kresli());
+  $('k-moje').addEventListener('input', () => kresli(true));
   $('k-pred').addEventListener('click', () => { strana--; kresli(true); });
   $('k-dal').addEventListener('click', () => { strana++; kresli(true); });
   kresli();

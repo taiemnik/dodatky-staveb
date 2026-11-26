@@ -123,14 +123,14 @@ OBCE = {r["ico"]: r for r in nacti("data/obce.csv")}
 KATEGORIE = ["statutární město", "obec III. typu", "obec II. typu"]
 kraje = sorted({r["kraj"] for r in K})
 mesta = sorted({r["mesto"] for r in K})
-PASMA_MEST = ["do 10 tis.", "10–20 tis.", "20–30 tis.", "30–50 tis.", "50–100 tis.", "100+ tis."]
+PASMA_MEST = ["do 5 tis.", "5–10 tis.", "10–20 tis.", "20–30 tis.", "30–50 tis.", "50–100 tis.", "100+ tis."]
 ZDROJE = ["bez dodatku", "hodnoty navázaných dodatků", "přepsaná hodnota původního záznamu", "dodatek bez ceny v registru"]
 
 
 def pasmo_mesta(o):
     if not o:
         return -1                                        # počet obyvatel máme jen u sídel ORP
-    return next(i for i, h in enumerate((10e3, 20e3, 30e3, 50e3, 100e3, 1e12)) if float(o) < h)
+    return next(i for i, h in enumerate((5e3, 10e3, 20e3, 30e3, 50e3, 100e3, 1e12)) if float(o) < h)
 
 
 def zdroj_ceny(r):
@@ -145,7 +145,7 @@ def zdroj_ceny(r):
 # [ID verze (odkaz do registru), město, předmět, rok, typ města, kraj, pásmo obyvatel, původní cena, počet dodatků,
 #  změna % (0 = bez dodatku, null = dodatek bez zjistitelné ceny), druh, povaha, jak je cena zjištěna]
 cr = [[r["idv"], mesta.index(r["mesto"]), r["predmet"].replace("Smlouva o dílo - ", "").strip()[:90], int(r["datum"][:4]),
-       KATEGORIE.index(r["kategorie"]), kraje.index(r["kraj"]), pasmo_mesta(r["obyvatel"]), round(float(r["cena_puvodni"])),
+       KATEGORIE.index(r["kategorie"]), kraje.index(r["kraj"]), pasmo_mesta(OBCE[r["mesto_ico"]]["obyvatel"]), round(float(r["cena_puvodni"])),
        int(r["n_dod_navazanych"]) + int(r["n_dod_odhadnutych"]) + int(r["n_dod_prilohou"]),
        (0.0 if r["ma_dodatek"] == "0" else float(r["zmena_pct"]) if r["zmena_pct"] != "" else None),
        SEZNAM_DRUHU.index(druh(r["predmet"])), SEZNAM_POVAH.index(povaha(r["predmet"])), zdroj_ceny(r)] for r in K]
@@ -178,7 +178,7 @@ presnost = {"smluv": len(_zz), "pasmo": sum(1 for a, b in _zz if _pasmo(a) == _p
 
 DATA = {
     "meta": {"sestaveno": date.today().isoformat(), "mesto": MESTO, "prah_mesto": PRAH_MESTO, "rok_do": ROK_DO,
-             "s_detailem": not BEZ_DETAILU, "presnost": presnost, "mesice_exportu": sorted(Path(f).name[3:10] for f in glob.glob(str(KOREN / "data/rs/*.stat.json")))},
+             "s_detailem": not BEZ_DETAILU, "presnost": presnost, "zdroj": "api" if "api" in KOHORTA else "exporty", "mesice_exportu": sorted(Path(f).name[3:10] for f in glob.glob(str(KOREN / "data/rs/*.stat.json")))},
     "vzorek": vzorek, "vz": vz, "mesto": mesto, "duvody": duvody, "druhy": SEZNAM_DRUHU, "povahy": SEZNAM_POVAH,
     "cr": cr, "kraje": kraje, "mesta": mesta, "kategorie": KATEGORIE, "pokryti": pokryti, "zdroje": ZDROJE, "pasma_mest": PASMA_MEST,
     "registr": dict(S),
@@ -186,6 +186,11 @@ DATA = {
 cil = KOREN / "docs" / "data.js"
 cil.parent.mkdir(exist_ok=True)
 cil.write_text("window.DATA = " + json.dumps(DATA, ensure_ascii=False, separators=(",", ":")) + ";\n", encoding="utf-8")
+# Lokální aplikace v jednom souboru (data vložená přímo do stránky): otevře se dvojklikem, jde poslat e-mailem.
+stranka = (KOREN / "docs" / "index.html").read_text(encoding="utf-8")
+assert stranka.count('<script src="data.js"></script>') == 1
+(KOREN / "dodatky-staveb.html").write_text(
+    stranka.replace('<script src="data.js"></script>', "<script>\n" + cil.read_text(encoding="utf-8") + "</script>"), encoding="utf-8")
 print(f"docs/data.js: {cil.stat().st_size/1024:.0f} kB | město {len(mesto)} smluv | kohorta ČR {len(cr)} | vzorek {vzorek['celek']['n']}"
       f" | detail města: {'ne' if BEZ_DETAILU else 'ano'}")
 print("vzorek:", json.dumps(vzorek["celek"], ensure_ascii=False))

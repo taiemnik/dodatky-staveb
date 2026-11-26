@@ -6,6 +6,9 @@
 # skupiny měst z neveřejného benchmarkingu. Do repa nepatří; vše jde znovu vyrobit skripty.
 data/
 
+# lokální aplikace v jednom souboru: vyrábí ji skripty/web_build.py z docs/
+/dodatky-staveb.html
+
 # pomocné a systémové soubory
 __pycache__/
 *.pyc

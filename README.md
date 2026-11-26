@@ -106,7 +106,8 @@ Spouštět z kořene repa. Python vždy s `-I` (zpracovává stažená data).
 | `skripty/kategorie_mest.py` | typ města do `data/obce.csv`: statutární · III. typ · II. typ (číselník ČSÚ č. 61) |
 | `skripty/sance_souhrn.py` | šance na nárůst 10 / 20 / 30 % a o 1 mil. Kč podle velikosti zakázky, typu města a typu stavby |
 | `skripty/lehka_presnost.py` | jak přesně jdou změna ceny a anomálie poznat jen z polí registru |
-| `skripty/web_build.py` | sestaví `docs/data.js` pro dashboard (bez názvů dodavatelů a ostatních měst) |
+| `skripty/csu_obyvatele.py` | počet obyvatel 388 měst k 1. 1. z otevřených dat ČSÚ (sada OBY02A) do `data/obce.csv` |
+| `skripty/web_build.py` | sestaví `docs/data.js` pro dashboard a lokální aplikaci v jednom souboru `dodatky-staveb.html` (otevře se dvojklikem); bez názvů dodavatelů |
 
 ### Postup
 
