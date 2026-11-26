@@ -76,6 +76,16 @@ Skupiny mají jednotky až desítky smluv – je to směr, ne norma. Na normu pr
 
 Plné znění: https://www.hlidacstatu.cz/news/licence a https://www.hlidacstatu.cz/news/provoznipodminky.
 
+### Token k API
+
+Token patří do souboru `.env` v kořeni repa (je v `.gitignore`, do gitu se nedostane). Jeden řádek, bez uvozovek a mezer:
+
+```
+HLIDAC_STATU_API_TOKEN=sem-vložit-token
+```
+
+Skript `skripty/hs_api.py` si ho přečte sám, nikam ho nevypisuje a curl-u ho předává standardním vstupem. Zkouška spojení a limitů: `python -I skripty/hs_api.py test`. Pozor na zálohy složky mimo git – `.env` do nich nepatří.
+
 ## Skripty
 
 Spouštět z kořene repa. Python vždy s `-I` (zpracovává stažená data).

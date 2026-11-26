@@ -1,3 +1,7 @@
+# Tajemství: API token Hlídače státu a cokoli dalšího v .env. Do gitu nikdy.
+.env
+.env.*
+
 # Stažená a odvozená data: jména podepisujících v textech dodatků, názvy dodavatelů (i fyzických osob),
 # skupiny měst z neveřejného benchmarkingu. Do repa nepatří; vše jde znovu vyrobit skripty.
 data/
@@ -9,4 +13,3 @@ __pycache__/
 _curl*.cfg
 desktop.ini
 Thumbs.db
-.env*
