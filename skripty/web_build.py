@@ -21,6 +21,9 @@ from collections import Counter
 from datetime import date
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))      # typy.py leží vedle (režim -I složku skriptu nepřidá)
+from typy import SEZNAM_DRUHU, SEZNAM_POVAH, druh, povaha     # noqa: E402
+
 sys.stdout.reconfigure(encoding="utf-8")
 KOREN = Path(__file__).resolve().parent.parent
 BEZ_DETAILU = "--bez-detailu-mesta" in sys.argv
@@ -98,6 +101,7 @@ RK = list(uniq.values())
 mesto = [{"id": r["id"] if not BEZ_DETAILU else "",
           "p": (r["predmet"].replace("Smlouva o dílo - ", "").strip()[:110]) if not BEZ_DETAILU else "",
           "r": int(r["podpis"][:4]), "u": UTVARY.get(r["utvar"], "jiný / neuveden"),
+          "k": SEZNAM_DRUHU.index(druh(r["predmet"])), "h": SEZNAM_POVAH.index(povaha(r["predmet"])),
           "b": round(float(r["cena_puvodni"])), "f": round(float(r["cena_konecna"])),
           "z": float(r["zmena_pct"]), "o": float(r["obrat_pct"]), "d": int(r["n_dodatku"]),
           "n": int(int(r["n_neurcenych"]) > 0), "t": int(int(r["termin"]) > 0),
@@ -123,7 +127,13 @@ def pasmo_mesta(o):
 
 
 cr = [[kraje.index(r["kraj"]), pasmo_mesta(r["obyvatel"]), round(float(r["cena_puvodni"])), int(r["ma_dodatek"]),
-       (float(r["zmena_pct"]) if r["zmena_pct"] != "" else None), int(r["mesto_ico"] == MESTO_ICO)] for r in K]
+       (float(r["zmena_pct"]) if r["zmena_pct"] != "" else None), int(r["mesto_ico"] == MESTO_ICO),
+       SEZNAM_DRUHU.index(druh(r["predmet"])), SEZNAM_POVAH.index(povaha(r["predmet"]))] for r in K]
+
+# vzorek po smlouvách – bez názvu města, předmětu i odkazu: [druh, povaha, původní cena, změna % | null, má dodatek, náhodný výběr]
+vz = [[SEZNAM_DRUHU.index(druh(V[i]["predmet"])), SEZNAM_POVAH.index(povaha(V[i]["predmet"])),
+       round(float(r["cena_puvodni"])), (float(r["zmena_pct"]) if int(r["n_neurcenych"]) == 0 else None),
+       int(int(r["n_dodatku"]) > 0), int(V[i]["vyber"] == "nahodny")] for i, r in RV.items() if i in V]
 
 # ---------- 4) struktura registru ve stažených měsících ----------
 S = Counter()
@@ -135,7 +145,7 @@ for f in glob.glob(str(KOREN / "data/rs/*.stat.json")):
 DATA = {
     "meta": {"sestaveno": date.today().isoformat(), "mesto": MESTO, "prah_mesto": PRAH_MESTO, "rok_do": ROK_DO,
              "s_detailem": not BEZ_DETAILU, "mesice_exportu": sorted(Path(f).name[3:10] for f in glob.glob(str(KOREN / "data/rs/*.stat.json")))},
-    "vzorek": vzorek, "mesto": mesto, "duvody": duvody,
+    "vzorek": vzorek, "vz": vz, "mesto": mesto, "duvody": duvody, "druhy": SEZNAM_DRUHU, "povahy": SEZNAM_POVAH,
     "cr": cr, "kraje": kraje, "pasma_mest": ["do 10 tis.", "10–20 tis.", "20–30 tis.", "30–50 tis.", "50–100 tis.", "100+ tis."],
     "registr": dict(S),
 }

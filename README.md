@@ -19,6 +19,21 @@ O kolik městům narůstá cena staveb přes dodatky ke smlouvě o dílo? Pilot 
 - Čistá změna ceny skrývá **obrat**: u kopřivnických smluv se změnou je medián čisté změny 5,5 %, ale vícepráce a méněpráce dohromady dělají 9,4 % původní ceny.
 - Jen z vyplněných polí registru (bez čtení textů) vyjde konečná cena správně u 36 z 61 kopřivnických smluv s dodatkem. Hodnota u dodatku nemá znaménko a dodatky přiložené k původnímu záznamu hodnotu nemají vůbec.
 
+### Standard podle typu (průměr změny ceny přes všechny smlouvy skupiny)
+
+| Skupina | Kopřivnice | Česko (vzorek) |
+|---|---|---|
+| rekonstrukce | +4,1 % (48 smluv; běžné pásmo 0 až +6,1 %) | +3,5 % (35; 0 až +6,7 %) |
+| oprava a údržba | +4,5 % (18) | +5,0 % (20) |
+| novostavba | +4,8 % (13) | +4,3 % (13) |
+| chodníky a cyklostezky | málo smluv | +0,1 % (8) |
+| komunikace a parkoviště | +3,2 % (16) | +3,3 % (18) |
+| školy (ZŠ, MŠ) | +1,5 % (21) | +3,1 % (19) |
+| památky a kultura | +3,9 % (6) | +11,0 % (9) |
+| mosty a lávky | +8,5 % (7) | málo smluv |
+
+Skupiny mají jednotky až desítky smluv – je to směr, ne norma. Na normu pro „města typu X a stavby typu Y“ je potřeba plný sběr.
+
 ## Zdroje dat
 
 | Kanál | K čemu | Omezení |
@@ -44,6 +59,7 @@ Spouštět z kořene repa. Python vždy s `-I` (zpracovává stažená data).
 | `skripty/retezy.py` | složí řetěz smlouva → dodatky → konečná cena; cenu, vícepráce a méněpráce čte z textu dodatků |
 | `skripty/retezy_souhrn.py`, `retezy_kontrola.py` | souhrn řetězů; křížová kontrola ceny z textu proti hodnotě v registru |
 | `skripty/vzorek_priprav.py`, `vzorek_souhrn.py` | náhodný vzorek z celostátní kohorty a odhad s intervaly spolehlivosti |
+| `skripty/typy.py`, `typy_souhrn.py` | třídění podle druhu stavby a povahy prací; standard (běžné pásmo) a extrémy po skupinách |
 | `skripty/web_build.py` | sestaví `docs/data.js` pro dashboard (bez názvů dodavatelů a ostatních měst) |
 
 ### Postup
@@ -95,6 +111,9 @@ Stažené exporty leží v `data/rs/` zabalené (`.jsonl.gz`); před výpočtem 
 - **Rozpor = neurčeno.** Když se cena z textu a hodnota v registru neshodnou, smlouva se označí a do statistik změny ceny nejde.
 - **Obrat** = vícepráce + méněpráce k původní ceně. Kde dodatek uvádí jen výsledný rozdíl, je obrat dolní mez.
 - **Stavební práce se v exportech poznávají podle slov v předmětu** (registr obor neeviduje). Na vzorku 60 smluv bylo 5 zařazeno chybně, pravidla jsou od té doby zpřísněná.
+- **Typ stavby** má dva rozměry, oba podle slov v předmětu: *druh* (mosty a lávky · školy · památky a kultura · sport a hřiště · bydlení a sociální · sítě a osvětlení · chodníky a cyklostezky · komunikace a parkoviště · veřejný prostor · ostatní budovy) a *povaha prací* (novostavba · rekonstrukce · oprava a údržba · demolice). Pravidla jdou shora dolů, první shoda vyhrává.
+- **Standard** = běžné pásmo změny ceny ve skupině (dolní až horní čtvrtina, medián, průměr, směrodatná odchylka) přes všechny smlouvy skupiny včetně těch beze změny.
+- **Extrém** = smlouva nad horní hradbou své skupiny: horní čtvrtina + 1,5násobek rozpětí čtvrtin, nejméně +10 %. U skupin pod 8 smluv se bere hradba celého souboru.
 
 ## Známá slabá místa
 
