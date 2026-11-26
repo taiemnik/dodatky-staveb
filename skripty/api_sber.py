@@ -29,13 +29,17 @@ KOREN = Path(__file__).resolve().parent.parent
 CIL = KOREN / "data" / "rs_api"
 CIL.mkdir(parents=True, exist_ok=True)
 LOG = CIL / "_sber.log"
-MAX_MEST = int(sys.argv[1]) if len(sys.argv) > 1 else 10 ** 6
+ARGS = [a for a in sys.argv[1:] if not a.startswith("--")]
+MAX_MEST = int(ARGS[0]) if ARGS else 10 ** 6
+# --pockej=MIN: před prvním dotazem počkat (když předchozí běh skončil na hodinovém limitu)
+POCKEJ = next((int(a.split("=")[1]) for a in sys.argv[1:] if a.startswith("--pockej=")), 0)
+CEKANI_NA_LIMIT = 65 * 60        # API po zhruba tisíci dotazech za hodinu vrací 429; čekáme hodinu a kousek
 KATEGORIE = ("statutární město", "obec III. typu", "obec II. typu")
 OD_ROKU = 2022                    # hloubka sběru: smlouvy a dodatky podepsané od tohoto roku (zadání z 26. 11. 2026)
 ROKY = range(OD_ROKU, 2027)
 OBDOBI = f"podepsano:[{OD_ROKU}-01-01 TO 2026-12-31]"
 MAX_STRAN = 200
-hs_api.PAUZA = 2.0                # pomalu: nejvýš jeden dotaz za dvě sekundy
+hs_api.PAUZA = 4.0                # pomalu: pod 900 dotazů za hodinu (26. 11. 2026 přišlo 429 po ~1000 za 40 minut)
 
 
 def log(text):
@@ -49,6 +53,10 @@ class Stop(Exception):
     pass
 
 
+class Limit(Exception):
+    pass
+
+
 volani, chyby_za_sebou = 0, 0
 
 
@@ -57,7 +65,9 @@ def stranka(dotaz, strana):
     global volani, chyby_za_sebou
     stav, _, data = hs_api.hledej_smlouvy(dotaz, strana)
     volani += 1
-    if stav in ("401", "403", "429"):
+    if stav == "429":
+        raise Limit()
+    if stav in ("401", "403"):
         raise Stop(f"API odmítlo dotaz (HTTP {stav}) po {volani} voláních")
     if stav != "200" or not isinstance(data, dict):
         chyby_za_sebou += 1
@@ -109,7 +119,10 @@ with open(KOREN / "data" / "obce.csv", encoding="utf-8-sig", newline="") as f:
     mesta = [r for r in csv.DictReader(f, delimiter=";") if r.get("kategorie") in KATEGORIE]
 mesta.sort(key=lambda r: (KATEGORIE.index(r["kategorie"]), r["nazev"]))
 log(f"START: měst {len(mesta)}, hotových {sum(1 for m in mesta if (CIL / f'rs_{m['ico']}.jsonl.gz').exists())}")
-hotovo = 0
+hotovo, volani_pri_cekani = 0, -1000
+if POCKEJ:
+    log(f"čekám {POCKEJ} minut před prvním dotazem")
+    time.sleep(POCKEJ * 60)
 try:
     for m in mesta:
         cil = CIL / f"rs_{m['ico']}.jsonl.gz"
@@ -117,9 +130,20 @@ try:
             continue
         if hotovo >= MAX_MEST:
             break
-        v0 = volani
-        zaklad = vse(f"icoPlatce:{m['ico']} AND oblast:stav AND cena:>999999 AND {OBDOBI}")
-        dodatky = vse(f"icoPlatce:{m['ico']} AND oblast:stav AND predmet:dodatek AND {OBDOBI}")
+        while True:
+            v0 = volani
+            try:
+                zaklad = vse(f"icoPlatce:{m['ico']} AND oblast:stav AND cena:>999999 AND {OBDOBI}")
+                dodatky = vse(f"icoPlatce:{m['ico']} AND oblast:stav AND predmet:dodatek AND {OBDOBI}")
+                break
+            except Limit:
+                # limit tarifu se neobchází: počkáme a město zkusíme znovu. Když limit přijde hned po čekání,
+                # je nejspíš denní – pak skončíme a pokračuje se další den (hotová města se přeskočí).
+                if volani - volani_pri_cekani < 30:
+                    raise Stop(f"limit API i po čekání (celkem {volani} volání) – nejspíš denní, pokračovat další den")
+                log(f"limit API po {volani} voláních, čekám {CEKANI_NA_LIMIT // 60} minut")
+                time.sleep(CEKANI_NA_LIMIT)
+                volani_pri_cekani = volani
         zaznamy = {r["id"]: r for r in zaklad + dodatky}            # tentýž záznam může být v obou skupinách
         docasny = cil.with_suffix(".part")
         with gzip.open(docasny, "wt", encoding="utf-8") as out:
