@@ -117,23 +117,47 @@ duvody = {"dodatku": len(DK), "s_textem": len(s_textem),
           "stavy": dict(Counter(d["stav"].split("+")[0] for d in DK))}
 
 # ---------- 3) celostátní kohorta (lehká metoda, jen metadata; bez názvů měst a dodavatelů) ----------
-K = nacti("data/cr/kohorta_2023.csv")
+KOHORTA = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--kohorta=")), "data/cr/kohorta_2023.csv")
+K = nacti(KOHORTA)
+OBCE = {r["ico"]: r for r in nacti("data/obce.csv")}
+KATEGORIE = ["statutární město", "obec III. typu", "obec II. typu"]
 kraje = sorted({r["kraj"] for r in K})
+mesta = sorted({r["mesto"] for r in K})
+PASMA_MEST = ["do 10 tis.", "10–20 tis.", "20–30 tis.", "30–50 tis.", "50–100 tis.", "100+ tis."]
+ZDROJE = ["bez dodatku", "hodnoty navázaných dodatků", "přepsaná hodnota původního záznamu", "dodatek bez ceny v registru"]
 
 
 def pasmo_mesta(o):
-    o = float(o) if o else 0
-    return next(i for i, h in enumerate((10e3, 20e3, 30e3, 50e3, 100e3, 1e12)) if o < h)
+    if not o:
+        return -1                                        # počet obyvatel máme jen u sídel ORP
+    return next(i for i, h in enumerate((10e3, 20e3, 30e3, 50e3, 100e3, 1e12)) if float(o) < h)
 
 
-cr = [[kraje.index(r["kraj"]), pasmo_mesta(r["obyvatel"]), round(float(r["cena_puvodni"])), int(r["ma_dodatek"]),
-       (float(r["zmena_pct"]) if r["zmena_pct"] != "" else None), int(r["mesto_ico"] == MESTO_ICO),
-       SEZNAM_DRUHU.index(druh(r["predmet"])), SEZNAM_POVAH.index(povaha(r["predmet"]))] for r in K]
+def zdroj_ceny(r):
+    if r["ma_dodatek"] == "0":
+        return 0
+    if r["zmena_pct"] == "":
+        return 3
+    return 2 if r["zdroj_ceny"] == "zmena_hodnoty_verze" else 1
 
-# vzorek po smlouvách – bez názvu města, předmětu i odkazu: [druh, povaha, původní cena, změna % | null, má dodatek, náhodný výběr]
+
+# Celostátní smlouvy z metadat registru – po řádcích, aby si je šlo na stránce zkontrolovat:
+# [ID verze (odkaz do registru), město, předmět, rok, typ města, kraj, pásmo obyvatel, původní cena, počet dodatků,
+#  změna % (0 = bez dodatku, null = dodatek bez zjistitelné ceny), druh, povaha, jak je cena zjištěna]
+cr = [[r["idv"], mesta.index(r["mesto"]), r["predmet"].replace("Smlouva o dílo - ", "").strip()[:90], int(r["datum"][:4]),
+       KATEGORIE.index(r["kategorie"]), kraje.index(r["kraj"]), pasmo_mesta(r["obyvatel"]), round(float(r["cena_puvodni"])),
+       int(r["n_dod_navazanych"]) + int(r["n_dod_odhadnutych"]) + int(r["n_dod_prilohou"]),
+       (0.0 if r["ma_dodatek"] == "0" else float(r["zmena_pct"]) if r["zmena_pct"] != "" else None),
+       SEZNAM_DRUHU.index(druh(r["predmet"])), SEZNAM_POVAH.index(povaha(r["predmet"])), zdroj_ceny(r)] for r in K]
+pokryti = {k: {"smluv": sum(1 for r in K if r["kategorie"] == k), "mest": len({r["mesto_ico"] for r in K if r["kategorie"] == k}),
+               "mest_celkem": sum(1 for o in OBCE.values() if o.get("kategorie") == k)} for k in KATEGORIE}
+
+# vzorek po smlouvách – bez názvu města, předmětu i odkazu:
+# [druh, povaha, původní cena, změna % | null, má dodatek, náhodný výběr, typ města]
 vz = [[SEZNAM_DRUHU.index(druh(V[i]["predmet"])), SEZNAM_POVAH.index(povaha(V[i]["predmet"])),
        round(float(r["cena_puvodni"])), (float(r["zmena_pct"]) if int(r["n_neurcenych"]) == 0 else None),
-       int(int(r["n_dodatku"]) > 0), int(V[i]["vyber"] == "nahodny")] for i, r in RV.items() if i in V]
+       int(int(r["n_dodatku"]) > 0), int(V[i]["vyber"] == "nahodny"),
+       KATEGORIE.index(OBCE[V[i]["mesto_ico"]]["kategorie"])] for i, r in RV.items() if i in V]
 
 # ---------- 4) struktura registru ve stažených měsících ----------
 S = Counter()
@@ -142,11 +166,21 @@ for f in glob.glob(str(KOREN / "data/rs/*.stat.json")):
         if k != "znacka":
             S[k] += v
 
+def _pasmo(z):
+    return 0 if z < -0.5 else 1 if z < 0.5 else 2 if z < 10 else 3 if z < 20 else 4 if z < 30 else 5
+
+
+_over = [r for r in nacti("data/kop/retezy.csv") if r["stavba"] == "1" and int(r["n_neurcenych"]) == 0] \
+    + [r for i, r in RV.items() if i in V and int(r["n_neurcenych"]) == 0]
+_zz = [(float(r["zmena_pct"]), (float(r["cena_konecna_lehka"]) / float(r["cena_puvodni"]) - 1) * 100) for r in _over]
+presnost = {"smluv": len(_zz), "pasmo": sum(1 for a, b in _zz if _pasmo(a) == _pasmo(b)),
+            "skut20": sum(1 for a, b in _zz if a >= 20), "najde20": sum(1 for a, b in _zz if a >= 20 and b >= 20)}
+
 DATA = {
     "meta": {"sestaveno": date.today().isoformat(), "mesto": MESTO, "prah_mesto": PRAH_MESTO, "rok_do": ROK_DO,
-             "s_detailem": not BEZ_DETAILU, "mesice_exportu": sorted(Path(f).name[3:10] for f in glob.glob(str(KOREN / "data/rs/*.stat.json")))},
+             "s_detailem": not BEZ_DETAILU, "presnost": presnost, "mesice_exportu": sorted(Path(f).name[3:10] for f in glob.glob(str(KOREN / "data/rs/*.stat.json")))},
     "vzorek": vzorek, "vz": vz, "mesto": mesto, "duvody": duvody, "druhy": SEZNAM_DRUHU, "povahy": SEZNAM_POVAH,
-    "cr": cr, "kraje": kraje, "pasma_mest": ["do 10 tis.", "10–20 tis.", "20–30 tis.", "30–50 tis.", "50–100 tis.", "100+ tis."],
+    "cr": cr, "kraje": kraje, "mesta": mesta, "kategorie": KATEGORIE, "pokryti": pokryti, "zdroje": ZDROJE, "pasma_mest": PASMA_MEST,
     "registr": dict(S),
 }
 cil = KOREN / "docs" / "data.js"

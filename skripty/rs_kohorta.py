@@ -16,6 +16,7 @@ Výstup:  kohorta_<rok>.csv (smlouva = řádek), dodatky_<rok>.csv; souhrny na o
 """
 import csv
 import glob
+import gzip
 import html
 import json
 import os
@@ -47,6 +48,8 @@ def f(x):
 
 with open(obce_csv, encoding="utf-8-sig", newline="") as fh:
     OBCE = {r["ico"]: r for r in csv.DictReader(fh, delimiter=";")}
+# Které typy měst do rozboru patří (sloupec „kategorie“ doplňuje kategorie_mest.py). Malé obce a Praha ne.
+KATEGORIE = {"statutární město", "obec III. typu", "obec II. typu"}
 
 # ---------- klasifikace předmětu smlouvy (klíčová slova; registr sám obor neeviduje) ----------
 RE_STAVBA = re.compile(
@@ -73,9 +76,13 @@ def tokeny(p):
 # ---------- 1) + 2) načtení a složení verzí ----------
 verze = defaultdict(list)
 mesice = []
-for soubor in sorted(glob.glob(os.path.join(slozka, "rs_*.jsonl"))):
-    mesice.append(os.path.basename(soubor)[3:10])
-    with open(soubor, encoding="utf-8") as fh:
+soubory = {os.path.basename(s)[3:10]: s for s in glob.glob(os.path.join(slozka, "rs_*.jsonl.gz"))}
+soubory.update({os.path.basename(s)[3:10]: s for s in glob.glob(os.path.join(slozka, "rs_*.jsonl"))})   # rozbalený má přednost
+for mesic in sorted(soubory):
+    soubor = soubory[mesic]
+    mesice.append(mesic)
+    # exporty leží zabalené (.gz), čteme je rovnou – nic se nemusí rozbalovat na disk
+    with (gzip.open(soubor, "rt", encoding="utf-8") if soubor.endswith(".gz") else open(soubor, encoding="utf-8")) as fh:
         for radek in fh:
             r = json.loads(radek)
             verze[r["ids"]].append(r)
@@ -131,10 +138,14 @@ print("smluv s obcí jako stranou:", len(smlouvy),
 # ---------- 3) kohorta ----------
 kohorta = {ids: s for ids, s in smlouvy.items()
            if not s["je_dodatek"] and s["je_stavba"] and s["platny"] and s["datum"].startswith(ROK)
-           and OBCE[s["mesto_ico"]]["sidlo_orp"] == "1" and s["dodavatel_ico"]
+           and OBCE[s["mesto_ico"]].get("kategorie") in KATEGORIE and s["dodavatel_ico"]
            and s["h_prvni"] and s["h_prvni"] >= PRAH}
-print(f"KOHORTA {ROK}: stavební smlouvy měst-sídel ORP, cena >= {PRAH:,.0f} Kč: {len(kohorta)}"
+print(f"KOHORTA {ROK}: stavební smlouvy měst (statutární, III. a II. typ), cena >= {PRAH:,.0f} Kč: {len(kohorta)}"
       f" | měst: {len({s['mesto_ico'] for s in kohorta.values()})}")
+for kat in sorted(KATEGORIE):
+    v_kat = [s for s in kohorta.values() if OBCE[s["mesto_ico"]]["kategorie"] == kat]
+    vsech = sum(1 for o in OBCE.values() if o.get("kategorie") == kat)
+    print(f"   {kat}: {len(v_kat)} smluv | měst se smlouvou {len({s['mesto_ico'] for s in v_kat})} z {vsech}")
 
 # ---------- 4) dodatky ----------
 dod_nav = defaultdict(list)          # a) navázané
@@ -248,7 +259,8 @@ for ids, s in kohorta.items():
     nz = navazujici(s, B, zt)
     o = OBCE[s["mesto_ico"]]
     radky.append({
-        "ids": ids, "idv": s["idv"], "mesto": s["mesto"], "mesto_ico": s["mesto_ico"], "kraj": o["kraj"],
+        "ids": ids, "idv": s["idv"], "mesto": s["mesto"], "mesto_ico": s["mesto_ico"], "kategorie": o["kategorie"],
+        "kraj": o["kraj"],
         "obyvatel": o["obyvatel"], "bvs_skupina": o["bvs_skupina"], "dodavatel": s["dodavatel"],
         "dodavatel_ico": s["dodavatel_ico"], "datum": s["datum"], "cislo": s["cislo"], "predmet": s["predmet"][:200],
         "cena_puvodni": B, "zaklad_ceny": s["zaklad"], "n_verzi": s["n_verzi"], "n_dod_navazanych": len(nav),

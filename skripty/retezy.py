@@ -351,6 +351,9 @@ for sid, d in Z.items():
             # Dva nezávislé zdroje se neshodly (cena z textu × hodnota v registru): nevěříme ani jednomu.
             # Smlouva se označí jako neurčená a do statistik změny ceny nejde.
             stav, nal_rozpor, nal = "rozpor_text_registr", nal, None
+        elif stav == "bez_zmeny_ceny" and (ty == "rozdil" or (ty == "nova_celkova" and abs(x["meta"] - P) / P > 0.002)):
+            # Text o změně ceny mlčí, ale registr u dodatku částku má -> také rozpor (text mohl být špatně přečten)
+            stav = "rozpor_text_registr"
         N = nal["N"] if nal else None
         V, M = (nal["V"], nal["M"]) if nal else (0.0, 0.0)
         if stav in ("neurceno", "bez_textu") and ty == "rozdil":
@@ -383,7 +386,14 @@ for sid, d in Z.items():
         for k, v in pr.items():
             if v and k != "par222":
                 prizn[k] += 1
-    lehka = ((lehka_celk if lehka_celk is not None else B) + lehka_rozd) if lehka_ma else B
+    # „lehká metoda“ = jen pole registru, bez čtení textů (stejná pravidla jako rs_kohorta.py):
+    # hodnoty navázaných dodatků; když žádné nejsou, vezme se dnešní hodnota původního záznamu, pokud ji město přepsalo
+    if lehka_ma:
+        lehka = (lehka_celk if lehka_celk is not None else B) + lehka_rozd
+    elif nyni and abs(nyni - B) / B > 0.002:
+        lehka = nyni
+    else:
+        lehka = B
     retezy.append({"id": sid, "ids": d["ids"], "podpis": datum(d), "utvar": d.get("utvar", ""),
                    "dodavatel": d["dodavatel"], "predmet": d["predmet"][:150],
                    "stavba": int(stavba), "oblasti": "|".join(d["oblasti"]), "cena_puvodni": round(B, 2),

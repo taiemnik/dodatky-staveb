@@ -11,6 +11,7 @@ Výstup:   <složka>/rs_<značka>.jsonl   – záznamy obcí (jedna verze zázna
 Soubor se přejmenuje na konečný název až po dočtení celého XML (useknutý přenos tak nezůstane nepoznán).
 """
 import csv
+import gzip
 import json
 import os
 import re
@@ -41,10 +42,10 @@ def t(el, jmeno):
 stat = {"znacka": znacka, "zaznamu": 0, "platnych": 0, "s_navazanym": 0, "predmet_dodatek": 0,
         "priloha_dodatek": 0, "obecnich": 0, "obecnich_s_navazanym": 0}
 RE_DOD = re.compile(r"dodat", re.I)
-cil = os.path.join(slozka, f"rs_{znacka}.jsonl")
+cil = os.path.join(slozka, f"rs_{znacka}.jsonl.gz")      # rovnou zabaleně: celý registr tak zabere stovky MB, ne GB
 docasny = f"{cil}.part{os.getpid()}"      # jedinečný název: dva souběžné přenosy téhož měsíce si nepřepíšou práci
 
-with open(docasny, "w", encoding="utf-8") as out:
+with gzip.open(docasny, "wt", encoding="utf-8") as out:
     # iterparse čte postupně; po zpracování záznam z paměti uvolníme (elem.clear)
     for _, elem in ET.iterparse(sys.stdin.buffer, events=("end",)):
         if elem.tag != NS + "zaznam":

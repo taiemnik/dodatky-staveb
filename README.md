@@ -10,10 +10,34 @@ O kolik městům narůstá cena staveb přes dodatky ke smlouvě o dílo? Pilot 
 |---|---|---|
 | Smlouvy | 91 stavebních smluv od 1,65 mil. Kč bez DPH, podpis 2016–2024 | 97 smluv nad 1 mil. Kč bez DPH, podpis 2023, města se sídlem ORP |
 | Má aspoň jeden dodatek | 71 % | 60 % (95% interval 50–69 %) |
-| Cena se změnila | 62 % | 46 % (36–56 %) |
-| Typická změna tam, kde se cena změnila (medián) | +4,5 % | +6,1 % (2,9–10,1) |
-| Průměr přes všechny smlouvy | +3,7 % | +3,9 % |
-| Korunově (součet konečných proti původním cenám) | +7,9 % | +8,6 % |
+| Cena se změnila | 62 % (53 z 85 s jistou cenou) | 47 % (38 z 81; interval 36–58 %) |
+| Typická změna tam, kde se cena změnila (medián) | +4,6 % | +6,8 % (2,3–10,5) |
+| Průměr přes všechny smlouvy | +3,8 % | +4,0 % |
+| Korunově (součet konečných proti původním cenám) | +7,9 % | +9,0 % |
+| Šance na nárůst 10 % a víc | 13 % | 17 % |
+| Šance na anomálii (20 % a víc) | 6 % (5 smluv) | 9 % (7 smluv) |
+| Šance na abnormální nárůst (30 % a víc) | 2 % (2 smlouvy) | 2 % (2 smlouvy) |
+| Nárůst o 1 mil. Kč a víc | 11 % | 10 % |
+
+Čísla se po zpřísnění ověřovací sady (26. 11.) liší od první verze o jednotky smluv. Aktuální hodnoty jsou vždy v dashboardu a v souborech `data/kop/` a `data/vzorek/` (`souhrn.txt`, `typy.txt`, `sance.txt`).
+
+### Tři měřítka nárůstu
+
+Samotné procento klame: u zakázky za 1 mil. Kč je +300 tis. Kč „abnormálních“ 30 %, u zakázky za 50 mil. Kč je 30 % patnáct milionů. Proto se každá smlouva hodnotí procentem i korunami:
+
+| Pole | Pravidlo (práh 20 % a 1 mil. Kč) | Kopřivnice | Česko (vzorek) |
+|---|---|---|---|
+| drobné rozšíření | 20 % a víc, pod 1 mil. Kč | 2 smlouvy | 5 smluv, všechny do 5 mil. Kč |
+| tichý nárůst | pod 20 %, ale 1 mil. Kč a víc | 6 smluv (4 ze 6 zakázek nad 20 mil. Kč) | 6 smluv (3 z 5 zakázek nad 20 mil. Kč) |
+| zásadní | 20 % a víc i 1 mil. Kč a víc | 3 smlouvy | 2 smlouvy |
+
+### Typ města
+
+Kategorie podle typu úřadu: statutární město (26) · obec III. typu (179) · obec II. typu (183); malé obce a Praha se neberou. **Obce II. typu z registru srovnávat nejde** – smlouvy uveřejňovat nemusí a v pěti stažených měsících je jen 14 stavebních smluv ze 6 obcí ze 183. Ve vzorku ČR: statutární města 30 smluv, nárůst 20 % a víc u 1; obce III. typu 51 smluv, u 6.
+
+### Stačí metadata?
+
+Ne na přesnou cenu, ano jako síto. Na 192 smlouvách s cenou ověřenou z textu trefila pole registru pásmo změny u 83 % a našla 11 ze 13 nárůstů nad 20 %. Chybuje tam, kde je dodatek přiložen k původnímu záznamu (cena v polích chybí), a u znaménka (zlevnění −16 % se tváří jako +16 %). Doporučený postup: celý registr z metadat jako síto, extrémy ověřit čtením dodatků.
 
 - Typická smlouva cenu nezmění nebo jen málo. Průměr a korunový nárůst táhne menšina zakázek, hlavně velkých.
 - Čistá změna ceny skrývá **obrat**: u kopřivnických smluv se změnou je medián čisté změny 5,5 %, ale vícepráce a méněpráce dohromady dělají 9,4 % původní ceny.
@@ -60,6 +84,9 @@ Spouštět z kořene repa. Python vždy s `-I` (zpracovává stažená data).
 | `skripty/retezy_souhrn.py`, `retezy_kontrola.py` | souhrn řetězů; křížová kontrola ceny z textu proti hodnotě v registru |
 | `skripty/vzorek_priprav.py`, `vzorek_souhrn.py` | náhodný vzorek z celostátní kohorty a odhad s intervaly spolehlivosti |
 | `skripty/typy.py`, `typy_souhrn.py` | třídění podle druhu stavby a povahy prací; standard (běžné pásmo) a extrémy po skupinách |
+| `skripty/kategorie_mest.py` | typ města do `data/obce.csv`: statutární · III. typ · II. typ (číselník ČSÚ č. 61) |
+| `skripty/sance_souhrn.py` | šance na nárůst 10 / 20 / 30 % a o 1 mil. Kč podle velikosti zakázky, typu města a typu stavby |
+| `skripty/lehka_presnost.py` | jak přesně jdou změna ceny a anomálie poznat jen z polí registru |
 | `skripty/web_build.py` | sestaví `docs/data.js` pro dashboard (bez názvů dodavatelů a ostatních měst) |
 
 ### Postup
@@ -116,6 +143,8 @@ Stažené exporty leží v `data/rs/` zabalené (`.jsonl.gz`); před výpočtem 
 - **Extrém** = smlouva nad horní hradbou své skupiny: horní čtvrtina + 1,5násobek rozpětí čtvrtin, nejméně +10 %. U skupin pod 8 smluv se bere hradba celého souboru.
 
 ## Známá slabá místa
+
+- **Plný sběr z otevřených dat registru se nepovedl.** Server `data.smlouvy.gov.cz` 25. 11. po zhruba 1,5 GB přenosů přestal odpovídat a 26. 11. shodil i dva souběžné přenosy do dvou minut. Stahování je zastavené. Cesty dál: API Hlídače státu s tokenem, nebo jedno pomalé spojení po malých dávkách přes více dní.
 
 - **Čtení cen je vyladěné na kopřivnické šablony dodatků.** Tam se cena z textu shodla s registrem u 71 ze 72 dodatků, u jiných měst zatím jen u 73 z 87. Rozpory jsou vyřazené, takže vzorek ČR má méně smluv s jistou cenou (85 z 97).
 - **Lehká metoda je dolní mez.** Stažených měsíců je pět (4, 6, 7, 8/2023 a 10/2024); ze 58 smluv vzorku s dodatkem jich zachytila 14.
