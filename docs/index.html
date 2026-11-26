@@ -451,7 +451,7 @@ function razeni(el, radky) {
   $('reg-popis').textContent = `Ve stažených měsících (${D.meta.mesice_exportu.join(', ').replace(/_/g, '/')}) je ${r.zaznamu.toLocaleString('cs-CZ')} záznamů registru, z toho ${cs(r.obecnich / r.zaznamu * 100, 0)} % s obcí jako smluvní stranou. `
     + `Vazbu na původní smlouvu má vyplněnou ${cs(r.s_navazanym / r.zaznamu * 100, 0)} % všech záznamů.`;
   // uvedení zdroje ve tvaru, který žádá licence Hlídače státu: „Zdroj: Hlídač státu“ s odkazem + odkaz na licenci + vyznačená úprava
-  $('pata').innerHTML = `Sestaveno ${D.meta.sestaveno.split('-').reverse().map(Number).join('. ')}. Zdroj: <a href="https://www.hlidacstatu.cz" target="_blank" rel="noopener">Hlídač státu</a> a Registr smluv, vlastní výpočet (<a href="https://creativecommons.org/licenses/by/4.0/legalcode.cs" target="_blank" rel="noopener">CC BY 4.0</a>); počty obyvatel ČSÚ.Pilotní verze – čísla se mohou změnit.`;
+  $('pata').innerHTML = `Sestaveno ${D.meta.sestaveno.split('-').reverse().map(Number).join('. ')}. Zdroj: <a href="https://www.hlidacstatu.cz" target="_blank" rel="noopener">Hlídač státu</a> a Registr smluv, vlastní výpočet (<a href="https://creativecommons.org/licenses/by/4.0/legalcode.cs" target="_blank" rel="noopener">CC BY 4.0</a>); počty obyvatel ČSÚ. Pilotní verze – čísla se mohou změnit.`;
   const tip = $('tip');
   document.addEventListener('mousemove', e => {
     const t = e.target.closest && e.target.closest('[data-tip]');
