@@ -1,0 +1,12 @@
+# Stažená a odvozená data: jména podepisujících v textech dodatků, názvy dodavatelů (i fyzických osob),
+# skupiny měst z neveřejného benchmarkingu. Do repa nepatří; vše jde znovu vyrobit skripty.
+data/
+
+# pomocné a systémové soubory
+__pycache__/
+*.pyc
+*.part*
+_curl*.cfg
+desktop.ini
+Thumbs.db
+.env*
