@@ -66,7 +66,15 @@ Skupiny mají jednotky až desítky smluv – je to směr, ne norma. Na normu pr
 | Hlídač státu – veřejné hledání a detail smlouvy | řetěz smlouva → dodatky pro jedno město nebo vzorek, čistý text příloh (včetně OCR) | veřejné stránky jen šetrně (40 dotazů za minutu, dávkově); pro větší objem API Hlídače s tokenem |
 | ČSÚ | počet obyvatel měst | – |
 
-Licence dat: CC BY. U každého převzatého údaje uvádět „Hlídač státu / Registr smluv“ a ID smlouvy.
+### Pravidla Hlídače státu (licence platná od 8. 11. 2026)
+
+- Data a obsah jsou pod **CC BY 4.0**: smí se sdílet i upravovat, i komerčně, s uvedením zdroje. Tvar: „Zdroj: Hlídač státu“ s odkazem na konkrétní záznam, odkaz na licenci, u upravených dat „vlastní výpočet“.
+- **Automatizované stahování webu se počítá jako převzetí podstatné části databáze** – zdroj je pak povinný.
+- **Držitel API klíče** (i bezplatného, platí i pro MCP server) uvádí zdroj u každého jednotlivého údaje, který zveřejní nebo předá dál, včetně výstupů aplikací a AI asistentů. Po výzvě má 30 dnů na nápravu, jinak smluvní pokuta 600 000 Kč za každý nenapravený případ. Klíč je jen pro uživatele a jeho zaměstnance; limity se nesmí obcházet více účty.
+- Bezplatný tarif má omezený počet volání (čísla nejsou veřejná, jsou vidět po přihlášení na `api.hlidacstatu.cz`). Placené: 12 000 Kč za 6 měsíců (jen veřejné zakázky), 250 000 Kč ročně (vše, bez povinnosti uvádět zdroj).
+- Texty smluv a příloh licence Hlídače nekryje (patří autorům); osobní údaje si každý zpracovává na vlastní odpovědnost podle GDPR.
+
+Plné znění: https://www.hlidacstatu.cz/news/licence a https://www.hlidacstatu.cz/news/provoznipodminky.
 
 ## Skripty
 

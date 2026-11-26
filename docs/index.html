@@ -158,7 +158,7 @@ footer{color:var(--text-muted);font-size:12px;margin-top:24px}
 <section class="sekce" id="metoda">
   <h2>Jak čísla vznikla a co neříkají</h2>
   <ul>
-    <li><b>Zdroj:</b> Registr smluv (otevřená data) a Hlídač státu, který k přílohám smluv nabízí čistý text. Licence CC BY – zdroj „Hlídač státu / Registr smluv“.</li>
+    <li><b>Zdroj:</b> <a href="https://www.hlidacstatu.cz" target="_blank" rel="noopener">Hlídač státu</a> (dohledání dodatků, čistý text příloh, obor smlouvy) a Registr smluv (otevřená data), vlastní výpočet. Data Hlídače státu jsou pod licencí <a href="https://creativecommons.org/licenses/by/4.0/legalcode.cs" target="_blank" rel="noopener">CC BY 4.0</a>; u jednotlivých smluv vede odkaz na jejich záznam.</li>
     <li><b>Města:</b> jen sídla obcí s rozšířenou působností (205). Menší obce smlouvy v registru uveřejňovat nemusí. Praha a městské části zahrnuty nejsou.</li>
     <li><b>Dodatek se hledá třemi cestami:</b> záznam navázaný na původní smlouvu, příloha přidaná k původnímu záznamu, samostatný záznam bez vazby.</li>
     <li><b>Cena se čte z textu dodatku</b> a přijme se jen tehdy, když čísla vyjdou součtem (dosavadní cena + vícepráce − méněpráce = nová cena) a nejsou v rozporu s hodnotou v registru.</li>
@@ -450,7 +450,8 @@ function razeni(el, radky) {
   const r = D.registr;
   $('reg-popis').textContent = `Ve stažených měsících (${D.meta.mesice_exportu.join(', ').replace(/_/g, '/')}) je ${r.zaznamu.toLocaleString('cs-CZ')} záznamů registru, z toho ${cs(r.obecnich / r.zaznamu * 100, 0)} % s obcí jako smluvní stranou. `
     + `Vazbu na původní smlouvu má vyplněnou ${cs(r.s_navazanym / r.zaznamu * 100, 0)} % všech záznamů.`;
-  $('pata').textContent = `Sestaveno ${D.meta.sestaveno.split('-').reverse().map(Number).join('. ')}. Data: Hlídač státu / Registr smluv (CC BY), počty obyvatel ČSÚ. Pilotní verze – čísla se mohou změnit.`;
+  // uvedení zdroje ve tvaru, který žádá licence Hlídače státu: „Zdroj: Hlídač státu“ s odkazem + odkaz na licenci + vyznačená úprava
+  $('pata').innerHTML = `Sestaveno ${D.meta.sestaveno.split('-').reverse().map(Number).join('. ')}. Zdroj: <a href="https://www.hlidacstatu.cz" target="_blank" rel="noopener">Hlídač státu</a> a Registr smluv, vlastní výpočet (<a href="https://creativecommons.org/licenses/by/4.0/legalcode.cs" target="_blank" rel="noopener">CC BY 4.0</a>); počty obyvatel ČSÚ.Pilotní verze – čísla se mohou změnit.`;
   const tip = $('tip');
   document.addEventListener('mousemove', e => {
     const t = e.target.closest && e.target.closest('[data-tip]');
