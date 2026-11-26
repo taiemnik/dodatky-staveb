@@ -96,6 +96,7 @@ Spouštět z kořene repa. Python vždy s `-I` (zpracovává stažená data).
 | `skripty/rs_stahni.sh` + `rs_filtr.py` | proudově stáhne měsíční export a nechá si jen záznamy, kde je stranou obec |
 | `skripty/rs_struktura.py` | jak města dodatky zveřejňují: podíl s vazbou na původní smlouvu a s vyplněnou hodnotou |
 | `skripty/rs_kohorta.py`, `rs_souhrn.py` | „lehká metoda“: stavební smlouvy měst podepsané v daném roce, dodatky a změna ceny jen z metadat; vrstvené tabulky |
+| `skripty/hs_api.py`, `api_sber.py` | API Hlídače s tokenem z `.env`; plný sběr metadat stavebních smluv a dodatků 388 měst od roku 2022 do `data/rs_api/` (jeden dotaz za 2 s, jde přerušit a pustit znovu) |
 | `skripty/hs_hledej.py` | hledání na Hlídači dotazovacím jazykem → CSV |
 | `skripty/pilot_mesto.py` | pro seznam smluv stáhne detaily, nejstarší verzi záznamu, navázané dodatky a texty dodatků |
 | `skripty/retezy.py` | složí řetěz smlouva → dodatky → konečná cena; cenu, vícepráce a méněpráce čte z textu dodatků |

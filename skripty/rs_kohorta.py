@@ -28,7 +28,8 @@ from datetime import date
 
 sys.stdout.reconfigure(encoding="utf-8")
 slozka, obce_csv, cil = sys.argv[1], sys.argv[2], sys.argv[3]
-ROK = sys.argv[4] if len(sys.argv) > 4 else "2023"
+ROK = sys.argv[4] if len(sys.argv) > 4 else "2023"      # jeden rok („2023“) nebo rozsah („2022-2025“)
+ROK_OD, ROK_DO = (ROK.split("-") + [ROK])[:2]
 PRAH = float(sys.argv[5]) if len(sys.argv) > 5 else 1_000_000
 os.makedirs(cil, exist_ok=True)
 
@@ -113,6 +114,10 @@ for ids, vs in verze.items():
     pn = bezdia(posl["predmet"])
     h_prvni, zaklad_prvni = hodnota(prvni)
     h_posl, zaklad_posl = hodnota(posl)
+    try:                                               # kolik dnů po podpisu byla zveřejněna platná verze záznamu
+        dni_zv = (date.fromisoformat(posl["cas"][:10]) - date.fromisoformat(posl["datum"][:10])).days
+    except ValueError:
+        dni_zv = 0
     # „pozdní příloha“: verze zveřejněná 14+ dní po první, která má víc příloh než předchozí.
     # Zachytí dodatek přiložený pod nic neříkajícím názvem souboru (např. „2900_1.pdf“).
     pozdni = 0
@@ -125,7 +130,7 @@ for ids, vs in verze.items():
         "dodavatel_ico": jine[0]["ico"] if jine else "", "dodavatel": jine[0]["nazev"] if jine else "",
         "predmet": html.unescape(posl["predmet"]), "pn": pn, "datum": posl["datum"], "cislo": posl["cislo"],
         "h_prvni": h_prvni, "h_posl": h_posl, "zaklad": zaklad_prvni or zaklad_posl, "navaz": posl["navaz"],
-        "n_verzi": len(vs), "pozdni_prilohy": pozdni, "platny": bool(platne),
+        "n_verzi": len(vs), "pozdni_prilohy": pozdni, "platny": bool(platne), "dni_do_zverejneni": dni_zv,
         "prvni_cas": prvni["cas"][:10], "posl_cas": posl["cas"][:10],
         "prilohy": posl["prilohy"],
         "je_dodatek": bool(posl["navaz"]) or bool(re.search(r"dodat(ek|ku|kem|ky)", pn)),
@@ -137,7 +142,7 @@ print("smluv s obcí jako stranou:", len(smlouvy),
 
 # ---------- 3) kohorta ----------
 kohorta = {ids: s for ids, s in smlouvy.items()
-           if not s["je_dodatek"] and s["je_stavba"] and s["platny"] and s["datum"].startswith(ROK)
+           if not s["je_dodatek"] and s["je_stavba"] and s["platny"] and ROK_OD <= s["datum"][:4] <= ROK_DO
            and OBCE[s["mesto_ico"]].get("kategorie") in KATEGORIE and s["dodavatel_ico"]
            and s["h_prvni"] and s["h_prvni"] >= PRAH}
 print(f"KOHORTA {ROK}: stavební smlouvy měst (statutární, III. a II. typ), cena >= {PRAH:,.0f} Kč: {len(kohorta)}"
@@ -266,7 +271,11 @@ for ids, s in kohorta.items():
         "cena_puvodni": B, "zaklad_ceny": s["zaklad"], "n_verzi": s["n_verzi"], "n_dod_navazanych": len(nav),
         "n_dod_odhadnutych": len(odh), "n_dod_prilohou": n_pril, "ma_dodatek": int(ma_dodatek),
         "vice_verzi_bez_dodatku": int(s["n_verzi"] > 1 and not ma_dodatek),
-        "mozny_dodatek_prilohou": int(s["pozdni_prilohy"] > 0 and not ma_dodatek),
+        # Dodatek chybně přiložený k původnímu záznamu (místo vlastního navázaného záznamu) v polích registru není.
+        # Stopy: pozdější verze s novou přílohou (jen z exportů registru), nebo platná verze záznamu zveřejněná
+        # víc než 60 dnů po podpisu – záznam byl po podpisu znovu vložen (zákonná lhůta pro uveřejnění je 30 dnů).
+        "mozny_dodatek_prilohou": int(not ma_dodatek and (s["pozdni_prilohy"] > 0 or s["dni_do_zverejneni"] > 60)),
+        "dni_do_zverejneni": s["dni_do_zverejneni"],
         "n_navazujicich_zakazek": len(nz), "navazujici_kc": round(sum(x["h_prvni"] for x in nz), 2),
         "cena_konecna": konecna if konecna is not None else "", "zdroj_ceny": zdroj_ceny,
         "zmena_pct": round((konecna - B) / B * 100, 2) if konecna is not None else "",
