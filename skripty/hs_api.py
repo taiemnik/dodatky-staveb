@@ -20,6 +20,8 @@ KOREN = Path(__file__).resolve().parent.parent
 API = "https://api.hlidacstatu.cz/api/v2"
 KLIC = "HLIDAC_STATU_API_TOKEN"
 PAUZA = 1.0                       # sekundy mezi dotazy; bezplatný tarif má omezený počet dotazů za sekundu i hodinu
+ZNACKA = "~~STAV-HTTP~~"          # oddělí tělo odpovědi od stavu HTTP, který curl vypíše na konec výstupu
+#                                   (nesmí začínat zavináčem: „-w @x“ by curl četl jako jméno souboru s formátem)
 
 
 def nacti_token():
@@ -38,22 +40,25 @@ def volej(cesta, parametry=None, schema="Token"):
     if not token:
         sys.exit(f"Chybí token: vytvoř {KOREN / '.env'} podle .env.example.")
     url = f"{API}/{cesta}" + ("?" + urllib.parse.urlencode(parametry) if parametry else "")
-    pracovni = KOREN / "data" / "api"
-    pracovni.mkdir(parents=True, exist_ok=True)
-    hlav, telo = pracovni / "_hlavicky.txt", pracovni / "_telo.json"
     # konfigurace curl-u standardním vstupem: token se nedostane na příkazovou řádku ani na disk
     konfig = f'header = "Authorization: {schema} {token}"\nheader = "Accept: application/json"\n'
-    r = subprocess.run(["curl", "-sS", "-m", "90", "-K", "-", "-D", str(hlav), "-o", str(telo), "-w", "%{http_code}", url],
+    # Odpověď se čte ze standardního výstupu curl-u (hlavičky, tělo, na konci značka se stavem HTTP).
+    # NIKDY přes společný soubor na disku: do 27. 11. 2026 šla do data/api/_telo.json a dva současně běžící
+    # skripty (sběr a kontrolní dotaz) si odpovědi navzájem přepisovaly – sběr Brna dostal smlouvy Kopřivnice.
+    r = subprocess.run(["curl", "-sS", "-m", "90", "-K", "-", "-D", "-", "-w", ZNACKA + "%{http_code}", url],
                        input=konfig.encode("utf-8"), capture_output=True)
     time.sleep(PAUZA)
-    stav = r.stdout.decode("ascii", "replace").strip()
-    hlavicky = {}
-    if hlav.exists():
-        for radek in hlav.read_text(encoding="utf-8", errors="replace").splitlines():
+    vystup, _, stav = r.stdout.decode("utf-8", "replace").rpartition(ZNACKA)
+    stav = stav.strip() or "000"                          # 000 = curl se nespojil (stejně jako %{http_code})
+    hlavicky, text = {}, vystup
+    while text.startswith("HTTP/"):                       # bloků hlaviček může být víc (100 Continue, přesměrování)
+        blok, oddelovac, text = text.partition("\r\n\r\n")
+        if not oddelovac:
+            break
+        for radek in blok.splitlines()[1:]:
             if ":" in radek:
                 k, v = radek.split(":", 1)
                 hlavicky[k.strip().lower()] = v.strip()
-    text = telo.read_text(encoding="utf-8", errors="replace") if telo.exists() else ""
     try:
         return stav, hlavicky, json.loads(text)
     except ValueError:

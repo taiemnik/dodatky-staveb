@@ -96,7 +96,8 @@ Spouštět z kořene repa. Python vždy s `-I` (zpracovává stažená data).
 | `skripty/rs_stahni.sh` + `rs_filtr.py` | proudově stáhne měsíční export a nechá si jen záznamy, kde je stranou obec |
 | `skripty/rs_struktura.py` | jak města dodatky zveřejňují: podíl s vazbou na původní smlouvu a s vyplněnou hodnotou |
 | `skripty/rs_kohorta.py`, `rs_souhrn.py` | „lehká metoda“: stavební smlouvy měst podepsané v daném roce, dodatky a změna ceny jen z metadat; vrstvené tabulky |
-| `skripty/hs_api.py`, `api_sber.py` | API Hlídače s tokenem z `.env`; plný sběr metadat stavebních smluv a dodatků 388 měst od roku 2022 do `data/rs_api/` (jeden dotaz za 2 s, jde přerušit a pustit znovu) |
+| `skripty/hs_api.py`, `api_sber.py` | API Hlídače s tokenem z `.env`; plný sběr metadat stavebních smluv a dodatků 388 měst od roku 2022 do `data/rs_api2/` (jeden dotaz za 4 s, jde přerušit a pustit znovu; u každého města kontroluje úplnost) |
+| `skripty/uplnost_api.py` | kolik smluv známých z exportů registru sběr přes API nenajde – kontrola úplnosti po každém sběru |
 | `skripty/hs_hledej.py` | hledání na Hlídači dotazovacím jazykem → CSV |
 | `skripty/pilot_mesto.py` | pro seznam smluv stáhne detaily, nejstarší verzi záznamu, navázané dodatky a texty dodatků |
 | `skripty/retezy.py` | složí řetěz smlouva → dodatky → konečná cena; cenu, vícepráce a méněpráce čte z textu dodatků |
@@ -108,6 +109,13 @@ Spouštět z kořene repa. Python vždy s `-I` (zpracovává stažená data).
 | `skripty/lehka_presnost.py` | jak přesně jdou změna ceny a anomálie poznat jen z polí registru |
 | `skripty/csu_obyvatele.py` | počet obyvatel 388 měst k 1. 1. z otevřených dat ČSÚ (sada OBY02A) do `data/obce.csv` |
 | `skripty/web_build.py` | sestaví `docs/data.js` pro dashboard a lokální aplikaci v jednom souboru `dodatky-staveb.html` (otevře se dvojklikem); bez názvů dodavatelů |
+
+### Dvě chyby sběru, na které si dát pozor (27. 11. 2026)
+
+1. **Stránkování s výchozím řazením ztrácí záznamy.** Hledání Hlídače (API i web) řadí podle relevance; u dotazů složených jen z filtrů má většina záznamů stejné skóre a na dalších stránkách se část záznamů opakuje a část chybí. Zkouška na Prostějově: 190 vrácených záznamů, jen 141 různých. První sběr (26.–27. 11., `data/rs_api/`) tak ztratil zhruba čtvrtinu smluv (z 1 154 smluv známých z exportů registru jich našel 74 %). Oprava: řadit podle času zveřejnění (`razeni=2`) a u každého dotazu porovnat počet různých záznamů s údajem `total`. Totéž platí pro `hs_hledej.py` – seznam Kopřivnice z pilotu měl 183 záznamů ze 197.
+2. **Dodatky nehledat podle slova „dodatek“ a oboru.** Dotaz `oblast:stav AND predmet:dodatek` našel 7 z 12 dodatků známých z exportů; dotaz přes vazbu `navazanyZaznam:[1 TO *]` všech 12. Sběr proto bere všechny navázané záznamy města a nechává si ty, které se váží ke stavební smlouvě.
+
+Odpověď API se navíc nesmí ukládat do společného souboru: dva současně běžící skripty si ji přepisovaly (opraveno v `hs_api.py`, odpověď se čte ze standardního výstupu).
 
 ### Postup
 

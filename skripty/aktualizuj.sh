@@ -4,8 +4,9 @@
 # Použití (z kořene repa):  bash skripty/aktualizuj.sh
 KOREN="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$KOREN" || exit 1
-MEST=$(ls data/rs_api | grep -c 'jsonl.gz$')
-python -I skripty/rs_kohorta.py data/rs_api data/obce.csv data/cr_api 2022-2025 1000000 | sed -n '3,6p'
+# data/rs_api2 = opravený sběr z 27. 11. 2026 (první sběr v data/rs_api je neúplný, nepoužívat)
+MEST=$(ls data/rs_api2 | grep -c 'jsonl.gz$')
+python -I skripty/rs_kohorta.py data/rs_api2 data/obce.csv data/cr_api 2022-2025 1000000 | sed -n '3,6p'
 python -I skripty/web_build.py --kohorta=data/cr_api/kohorta_2022-2025.csv | head -1
 git add docs/index.html docs/data.js skripty README.md
 if git diff --cached --quiet; then
