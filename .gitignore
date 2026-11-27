@@ -16,3 +16,7 @@ __pycache__/
 _curl*.cfg
 desktop.ini
 Thumbs.db
+
+# místní stav nástrojů (ruflo si ho zakládá ve složce, odkud běží session); do veřejného repa nepatří
+.claude-flow/
+.swarm/
