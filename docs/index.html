@@ -64,12 +64,54 @@ footer{color:var(--text-muted);font-size:12px;margin-top:24px}
 <main>
 <header>
   <h1>O kolik městům narůstá cena staveb přes dodatky</h1>
-  <p class="lead">Pilotní rozbor Registru smluv: stavební smlouvy měst se sídlem obce s rozšířenou působností, jejich dodatky a konečná cena. Jednotkou je stavební akce – smlouva o dílo a všechny její dodatky. Změna se počítá proti ceně v původní smlouvě, bez DPH.</p>
+  <p class="lead">Srovnání měst nad Registrem smluv: stavební smlouvy statutárních měst a obcí III. a II. typu, jejich dodatky a konečná cena. Jednotkou je stavební akce – smlouva o dílo a všechny její dodatky. Změna se počítá proti ceně v původní smlouvě, bez DPH.</p>
   <div class="varovani"><b>Pilot, ne hotová statistika.</b> Čísla vznikla 25. 11. 2026 automatickým čtením smluv a dodatků. Dodatky, u kterých se cena z textu a hodnota v registru neshodly, jsou vedené jako „neurčeno“ a do výsledků se nepočítají. Než z čísel uděláte závěr o konkrétní stavbě, otevřete si její záznam.</div>
 </header>
+<nav class="pozn" style="margin-top:14px">Na stránce: <a href="#kohorta">moje město</a> · <a href="#vsechna">všechna města</a> · <a href="#smlouvy">smlouvy ke kontrole</a> · <a href="#typy">standard podle typu stavby</a> · <a href="#vzorek">ověřovací vzorek</a> · <a href="#mesto">Kopřivnice do hloubky</a> · <a href="#metoda">metoda</a></nav>
+
+<section class="sekce" id="kohorta">
+  <h2>Jak si vede moje město proti ostatním</h2>
+  <p class="lead">Vyberte město. Ukáže se vedle průměru stejně velkých měst, měst se stejným typem úřadu, svého kraje a celé republiky. Filtry vedle platí pro město i pro všechna srovnání.</p>
+  <div class="filtry">
+    <label>Moje město<input id="k-moje" list="k-mesta" placeholder="začněte psát název…" style="font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--surface-1);color:var(--text-primary);width:210px"></label>
+    <label>Rok podpisu<select id="k-rok"><option value="">všechny</option></select></label>
+    <label>Původní cena<select id="k-cena"><option value="">všechny</option><option value="1-2">1–2 mil. Kč</option><option value="2-5">2–5 mil. Kč</option><option value="5-20">5–20 mil. Kč</option><option value="20-50">20–50 mil. Kč</option><option value="50-99999">50 mil. Kč a víc</option></select></label>
+    <label>Druh stavby<select id="k-druh"><option value="">všechny</option></select></label>
+    <label>Povaha prací<select id="k-povaha"><option value="">všechny</option></select></label>
+    <label>Korunový práh<select id="k-prah"><option value="500000">0,5 mil. Kč</option><option value="1000000" selected>1 mil. Kč</option><option value="2000000">2 mil. Kč</option><option value="5000000">5 mil. Kč</option></select></label>
+  </div>
+  <div id="k-moje-vystup"></div>
+  <div class="varovani" id="k-var"></div>
+
+  <h2 id="vsechna" style="margin-top:26px">Všechna města</h2>
+  <p class="pozn">Souhrn za všechna města, nebo za výběr podle typu města, kraje a velikosti. Filtry roku, ceny a typu stavby nahoře platí i tady.</p>
+  <div class="filtry">
+    <label>Typ města<select id="k-kat"><option value="">všechny</option></select></label>
+    <label>Kraj<select id="k-kraj"><option value="">všechny</option></select></label>
+    <label>Velikost města<select id="k-mesto"><option value="">všechny</option></select></label>
+    <label>Město<input id="k-jmeno" list="k-mesta" placeholder="začněte psát…" style="font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--surface-1);color:var(--text-primary);width:170px"><datalist id="k-mesta"></datalist></label>
+    <label>Změna ceny<select id="k-zmena"><option value="">všechny</option><option value="10">nárůst 10 % a víc</option><option value="20">nárůst 20 % a víc (anomálie)</option><option value="30">nárůst 30 % a víc (abnormální)</option><option value="minus">zlevnění</option><option value="nezn">dodatek bez ceny v registru</option></select></label>
+  </div>
+  <div class="dlazdice" id="k-dl"></div>
+
+  <h3 style="margin-top:14px">Šance na nárůst – členit podle <select id="k-clen"><option value="cena">velikosti zakázky</option><option value="kat">typu města</option><option value="obyv">velikosti města</option><option value="druh">druhu stavby</option><option value="povaha">povahy prací</option><option value="kraj">kraje</option><option value="rok">roku podpisu</option></select></h3>
+  <div class="tab" style="max-height:none"><table id="k-sance"></table></div>
+  <p class="pozn"><b>Tři měřítka vedle sebe.</b> Procento ukazuje, jak moc se zakázka změnila vůči sobě; koruny, kolik to stálo. <b>Drobné rozšíření</b> = nárůst 20 % a víc, ale pod korunovým prahem (typicky malá zakázka, kde se přidal kus chodníku). <b>Tichý nárůst</b> = pod 20 %, ale nad korunovým prahem (velká stavba, kde procento nevyčnívá a peníze ano). <b>Zásadní</b> = 20 % a víc a zároveň nad prahem. Podíly se počítají ze smluv se známou cenou; skupiny pod 5 smluv se neukazují.</p>
+
+  <div class="graf" style="margin-top:16px"><h3>Procenta proti korunám: každá tečka je smlouva se změnou ceny</h3>
+    <div class="posuv"><div id="k-bod" style="min-width:700px"></div></div>
+    <div class="legenda"><span><i style="background:var(--t1);border-radius:50%"></i>do 20 %</span><span><i style="background:var(--t2);border-radius:50%"></i>20–30 % (anomálie)</span><span><i style="background:var(--t3);border-radius:50%"></i>30 % a víc (abnormální)</span><span>křivka = nárůst o korunový práh</span></div>
+    <p class="pozn">Vodorovně původní cena (každý dílek je desetinásobek), svisle změna ceny. Nad křivkou je nárůst větší než korunový práh. Smlouvy beze změny v grafu nejsou. Kliknutím se otevře záznam smlouvy na Hlídači státu.</p></div>
+
+  <h3 id="smlouvy" style="margin-top:18px">Smlouvy ke kontrole</h3>
+  <p class="pozn" id="k-tab-pozn"></p>
+  <div class="tab"><table id="k-tab"></table></div>
+  <div class="filtry" style="align-items:center"><button id="k-pred" type="button">‹ předchozí</button><span class="pozn" id="k-str"></span><button id="k-dal" type="button">další ›</button></div>
+</section>
+
 
 <section class="sekce" id="vzorek">
-  <h2>Česko: náhodný vzorek smluv z roku 2023</h2>
+  <h2>Ověření: náhodný vzorek smluv z roku 2023 s cenou přečtenou z dodatků</h2>
   <p class="pozn" id="vz-popis"></p>
   <div class="dlazdice" id="vz-dl"></div>
   <div class="grafy">
@@ -121,44 +163,6 @@ footer{color:var(--text-muted);font-size:12px;margin-top:24px}
   <h3 style="margin-top:18px">Extrémy</h3>
   <p class="pozn" id="t-ext-pozn"></p>
   <div class="tab"><table id="t-ext"></table></div>
-</section>
-
-<section class="sekce" id="kohorta">
-  <h2>Česko: smlouvy měst z metadat registru</h2>
-  <div class="varovani" id="k-var"></div>
-  <div class="graf" style="margin:14px 0 6px">
-    <h3>Moje město proti průměrům</h3>
-    <div class="filtry"><label>Moje město<input id="k-moje" list="k-mesta" placeholder="začněte psát název…" style="font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--surface-1);color:var(--text-primary);width:210px"></label></div>
-    <div id="k-moje-vystup"></div>
-  </div>
-  <h3 style="margin-top:18px">Všechna města – filtry</h3>
-  <div class="filtry">
-    <label>Rok podpisu<select id="k-rok"><option value="">všechny</option></select></label>
-    <label>Typ města<select id="k-kat"><option value="">všechny</option></select></label>
-    <label>Kraj<select id="k-kraj"><option value="">všechny</option></select></label>
-    <label>Velikost města<select id="k-mesto"><option value="">všechny</option></select></label>
-    <label>Město<input id="k-jmeno" list="k-mesta" placeholder="začněte psát…" style="font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--surface-1);color:var(--text-primary);width:170px"><datalist id="k-mesta"></datalist></label>
-    <label>Původní cena<select id="k-cena"><option value="">všechny</option><option value="1-2">1–2 mil. Kč</option><option value="2-5">2–5 mil. Kč</option><option value="5-20">5–20 mil. Kč</option><option value="20-50">20–50 mil. Kč</option><option value="50-99999">50 mil. Kč a víc</option></select></label>
-    <label>Druh stavby<select id="k-druh"><option value="">všechny</option></select></label>
-    <label>Povaha prací<select id="k-povaha"><option value="">všechny</option></select></label>
-    <label>Změna ceny<select id="k-zmena"><option value="">všechny</option><option value="10">nárůst 10 % a víc</option><option value="20">nárůst 20 % a víc (anomálie)</option><option value="30">nárůst 30 % a víc (abnormální)</option><option value="minus">zlevnění</option><option value="nezn">dodatek bez ceny v registru</option></select></label>
-    <label>Korunový práh<select id="k-prah"><option value="500000">0,5 mil. Kč</option><option value="1000000" selected>1 mil. Kč</option><option value="2000000">2 mil. Kč</option><option value="5000000">5 mil. Kč</option></select></label>
-  </div>
-  <div class="dlazdice" id="k-dl"></div>
-
-  <h3 style="margin-top:14px">Šance na nárůst – členit podle <select id="k-clen"><option value="cena">velikosti zakázky</option><option value="kat">typu města</option><option value="obyv">velikosti města</option><option value="druh">druhu stavby</option><option value="povaha">povahy prací</option><option value="kraj">kraje</option><option value="rok">roku podpisu</option></select></h3>
-  <div class="tab" style="max-height:none"><table id="k-sance"></table></div>
-  <p class="pozn"><b>Tři měřítka vedle sebe.</b> Procento ukazuje, jak moc se zakázka změnila vůči sobě; koruny, kolik to stálo. <b>Drobné rozšíření</b> = nárůst 20 % a víc, ale pod korunovým prahem (typicky malá zakázka, kde se přidal kus chodníku). <b>Tichý nárůst</b> = pod 20 %, ale nad korunovým prahem (velká stavba, kde procento nevyčnívá a peníze ano). <b>Zásadní</b> = 20 % a víc a zároveň nad prahem. Podíly se počítají ze smluv se známou cenou; skupiny pod 5 smluv se neukazují.</p>
-
-  <div class="graf" style="margin-top:16px"><h3>Procenta proti korunám: každá tečka je smlouva se změnou ceny</h3>
-    <div class="posuv"><div id="k-bod" style="min-width:700px"></div></div>
-    <div class="legenda"><span><i style="background:var(--t1);border-radius:50%"></i>do 20 %</span><span><i style="background:var(--t2);border-radius:50%"></i>20–30 % (anomálie)</span><span><i style="background:var(--t3);border-radius:50%"></i>30 % a víc (abnormální)</span><span>křivka = nárůst o korunový práh</span></div>
-    <p class="pozn">Vodorovně původní cena (každý dílek je desetinásobek), svisle změna ceny. Nad křivkou je nárůst větší než korunový práh. Smlouvy beze změny v grafu nejsou. Kliknutím se otevře záznam smlouvy na Hlídači státu.</p></div>
-
-  <h3 style="margin-top:18px">Smlouvy ke kontrole</h3>
-  <p class="pozn" id="k-tab-pozn"></p>
-  <div class="tab"><table id="k-tab"></table></div>
-  <div class="filtry" style="align-items:center"><button id="k-pred" type="button">‹ předchozí</button><span class="pozn" id="k-str"></span><button id="k-dal" type="button">další ›</button></div>
 </section>
 
 <section class="sekce" id="metoda">
@@ -429,7 +433,7 @@ function razeni(el, radky) {
   }
   function moje(prah) {
     const el = $('k-moje-vystup'), jm = $('k-moje').value.trim().toLowerCase(), g = id => $(id).value;
-    if (!jm) { el.innerHTML = '<p class="pozn">Vyberte město – ukáže se vedle průměru stejně velkých měst, stejného typu úřadu, kraje a celé republiky. Platí filtry roku, ceny, druhu stavby a povahy prací nastavené níže.</p>'; return; }
+    if (!jm) { el.innerHTML = '<p class="pozn">Vyberte město – ukáže se vedle průměru stejně velkých měst, stejného typu úřadu, kraje a celé republiky. Platí filtry roku, ceny, druhu stavby a povahy prací nastavené vedle.</p>'; return; }
     const [ca, cb] = (g('k-cena') || '0-9999999').split('-').map(Number);
     // společný základ: bez filtrů území (ty určují srovnávací skupiny)
     const zaklad = R.filter(r => (g('k-rok') === '' || r.rok == g('k-rok')) && r.b >= ca * 1e6 && r.b < cb * 1e6 && (g('k-druh') === '' || r.druh == g('k-druh')) && (g('k-povaha') === '' || r.povaha == g('k-povaha')));
