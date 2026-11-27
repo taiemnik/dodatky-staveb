@@ -8,18 +8,18 @@ O kolik městům narůstá cena staveb přes dodatky ke smlouvě o dílo? Pilot 
 
 | | Kopřivnice (všechny smlouvy) | Česko (náhodný vzorek) |
 |---|---|---|
-| Smlouvy | 91 stavebních smluv od 1,65 mil. Kč bez DPH, podpis 2016–2024 | 97 smluv nad 1 mil. Kč bez DPH, podpis 2023, města se sídlem ORP |
-| Má aspoň jeden dodatek | 71 % | 60 % (95% interval 50–69 %) |
-| Cena se změnila | 62 % (53 z 85 s jistou cenou) | 47 % (38 z 81; interval 36–58 %) |
-| Typická změna tam, kde se cena změnila (medián) | +4,6 % | +6,8 % (2,3–10,5) |
-| Průměr přes všechny smlouvy | +3,8 % | +4,0 % |
+| Smlouvy | 95 stavebních smluv od 1,65 mil. Kč bez DPH, podpis 2016–2024 | 97 smluv nad 1 mil. Kč bez DPH, podpis 2023, města se sídlem ORP |
+| Má aspoň jeden dodatek | 80 % (76 smluv) | 60 % (95% interval 50–69 %) |
+| Cena se změnila | 67 % (56 z 84 s jistou cenou) | 47 % (38 z 81; interval 36–58 %) |
+| Typická změna tam, kde se cena změnila (medián) | +4,4 % | +6,8 % (2,3–10,5) |
+| Průměr přes všechny smlouvy | +3,9 % | +4,0 % |
 | Korunově (součet konečných proti původním cenám) | +7,9 % | +9,0 % |
 | Šance na nárůst 10 % a víc | 13 % | 17 % |
 | Šance na anomálii (20 % a víc) | 6 % (5 smluv) | 9 % (7 smluv) |
 | Šance na abnormální nárůst (30 % a víc) | 2 % (2 smlouvy) | 2 % (2 smlouvy) |
 | Nárůst o 1 mil. Kč a víc | 11 % | 10 % |
 
-Čísla se po zpřísnění ověřovací sady (26. 11.) liší od první verze o jednotky smluv. Aktuální hodnoty jsou vždy v dashboardu a v souborech `data/kop/` a `data/vzorek/` (`souhrn.txt`, `typy.txt`, `sance.txt`).
+Čísla za Kopřivnici jsou po doplnění z 27. 11. 2026: přibyly 4 smlouvy, které první seznam vynechal (chyba stránkování), a u 11 smluv dodatek přiložený k původnímu záznamu pod názvem typu `D1.pdf` nebo `DOD_1_….pdf`, který pilot nepoznal. Podíl smluv s dodatkem tím vzrostl ze 71 % na 80 %, šance na nárůst 10 / 20 / 30 % se nezměnily. Aktuální hodnoty jsou vždy v dashboardu a v souborech `data/kop/` a `data/vzorek/` (`souhrn.txt`, `typy.txt`, `sance.txt`).
 
 ### Tři měřítka nárůstu
 
@@ -28,7 +28,7 @@ Samotné procento klame: u zakázky za 1 mil. Kč je +300 tis. Kč „abnormáln
 | Pole | Pravidlo (práh 20 % a 1 mil. Kč) | Kopřivnice | Česko (vzorek) |
 |---|---|---|---|
 | drobné rozšíření | 20 % a víc, pod 1 mil. Kč | 2 smlouvy | 5 smluv, všechny do 5 mil. Kč |
-| tichý nárůst | pod 20 %, ale 1 mil. Kč a víc | 6 smluv (4 ze 6 zakázek nad 20 mil. Kč) | 6 smluv (3 z 5 zakázek nad 20 mil. Kč) |
+| tichý nárůst | pod 20 %, ale 1 mil. Kč a víc | 6 smluv (4 ze 7 zakázek nad 20 mil. Kč) | 6 smluv (3 z 5 zakázek nad 20 mil. Kč) |
 | zásadní | 20 % a víc i 1 mil. Kč a víc | 3 smlouvy | 2 smlouvy |
 
 ### Typ města
@@ -40,19 +40,19 @@ Kategorie podle typu úřadu: statutární město (26) · obec III. typu (179) �
 Ne na přesnou cenu, ano jako síto. Na 192 smlouvách s cenou ověřenou z textu trefila pole registru pásmo změny u 83 % a našla 11 ze 13 nárůstů nad 20 %. Chybuje tam, kde je dodatek přiložen k původnímu záznamu (cena v polích chybí), a u znaménka (zlevnění −16 % se tváří jako +16 %). Doporučený postup: celý registr z metadat jako síto, extrémy ověřit čtením dodatků.
 
 - Typická smlouva cenu nezmění nebo jen málo. Průměr a korunový nárůst táhne menšina zakázek, hlavně velkých.
-- Čistá změna ceny skrývá **obrat**: u kopřivnických smluv se změnou je medián čisté změny 5,5 %, ale vícepráce a méněpráce dohromady dělají 9,4 % původní ceny.
-- Jen z vyplněných polí registru (bez čtení textů) vyjde konečná cena správně u 36 z 61 kopřivnických smluv s dodatkem. Hodnota u dodatku nemá znaménko a dodatky přiložené k původnímu záznamu hodnotu nemají vůbec.
+- Čistá změna ceny skrývá **obrat**: u kopřivnických smluv se změnou je medián čisté změny 5,2 %, ale vícepráce a méněpráce dohromady dělají 7,9 % původní ceny.
+- Jen z vyplněných polí registru (bez čtení textů) vyjde konečná cena správně u 40 z 65 kopřivnických smluv s dodatkem. Hodnota u dodatku nemá znaménko a dodatky přiložené k původnímu záznamu hodnotu nemají vůbec.
 
 ### Standard podle typu (průměr změny ceny přes všechny smlouvy skupiny)
 
 | Skupina | Kopřivnice | Česko (vzorek) |
 |---|---|---|
-| rekonstrukce | +4,1 % (48 smluv; běžné pásmo 0 až +6,1 %) | +3,5 % (35; 0 až +6,7 %) |
-| oprava a údržba | +4,5 % (18) | +5,0 % (20) |
+| rekonstrukce | +4,2 % (47 smluv; běžné pásmo 0 až +6,4 %) | +3,5 % (35; 0 až +6,7 %) |
+| oprava a údržba | +5,1 % (16) | +5,0 % (20) |
 | novostavba | +4,8 % (13) | +4,3 % (13) |
 | chodníky a cyklostezky | málo smluv | +0,1 % (8) |
-| komunikace a parkoviště | +3,2 % (16) | +3,3 % (18) |
-| školy (ZŠ, MŠ) | +1,5 % (21) | +3,1 % (19) |
+| komunikace a parkoviště | +3,6 % (15) | +3,3 % (18) |
+| školy (ZŠ, MŠ) | +1,5 % (20) | +3,1 % (19) |
 | památky a kultura | +3,9 % (6) | +11,0 % (9) |
 | mosty a lávky | +8,5 % (7) | málo smluv |
 
@@ -100,6 +100,7 @@ Spouštět z kořene repa. Python vždy s `-I` (zpracovává stažená data).
 | `skripty/uplnost_api.py` | kolik smluv známých z exportů registru sběr přes API nenajde – kontrola úplnosti po každém sběru |
 | `skripty/hs_hledej.py` | hledání na Hlídači dotazovacím jazykem → CSV |
 | `skripty/pilot_mesto.py` | pro seznam smluv stáhne detaily, nejstarší verzi záznamu, navázané dodatky a texty dodatků |
+| `skripty/pilot_dopln_api.py`, `pravidla.py` | doplní pilot přes API: záznamy, které seznam z webu vynechal, a dodatky přiložené k původní smlouvě pod názvem `D1`, `DOD_1` (ověří je nadpisem v textu) |
 | `skripty/retezy.py` | složí řetěz smlouva → dodatky → konečná cena; cenu, vícepráce a méněpráce čte z textu dodatků |
 | `skripty/retezy_souhrn.py`, `retezy_kontrola.py` | souhrn řetězů; křížová kontrola ceny z textu proti hodnotě v registru |
 | `skripty/vzorek_priprav.py`, `vzorek_souhrn.py` | náhodný vzorek z celostátní kohorty a odhad s intervaly spolehlivosti |

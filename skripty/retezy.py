@@ -24,6 +24,9 @@ import unicodedata
 from collections import Counter, defaultdict
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from pravidla import cislo_prilohy, priloha_je_dodatek  # noqa: E402  (dodatek v příloze: „Dodatek_č.1“, „DOD_1“, „D1“)
+
 sys.stdout.reconfigure(encoding="utf-8")
 S = Path(sys.argv[1])
 DPH = (0.21, 0.15, 0.12, 0.10)
@@ -291,10 +294,22 @@ for sid, d in Z.items():
         continue
     # dokumenty dodatků: a) přiložené k původnímu záznamu, b) samostatné navázané záznamy
     docs = []
+    # a) přílohy původního záznamu, které jsou dodatkem (pravidla.py: název „dodat…“, nebo „DOD_1“ / „D1“
+    #    potvrzené začátkem textu). Víc příloh se stejným číslem = jeden dodatek (tělo + jeho rozpočty):
+    #    čte se první čitelná, ostatní jsou záloha, kdyby v ní cena nebyla.
+    skupiny, bez_cisla_p = defaultdict(list), []
     for p in d["prilohy"]:
-        if re.search("dodat", p["nazev"], re.I):
-            docs.append({"zdroj": "priloha", "id": sid, "nazev": p["nazev"], "cd": cislo_dodatku(p["nazev"]),
-                         "datum": "", "text": p.get("text", ""), "slov": p["slov"], "meta": None})
+        if priloha_je_dodatek(p):
+            c = cislo_prilohy(p["nazev"])
+            if c is None:
+                bez_cisla_p.append([p])                      # dodatek bez čísla v názvu: každý zvlášť
+            else:
+                skupiny[c].append(p)
+    for c, ps in list(skupiny.items()) + [(None, ps) for ps in bez_cisla_p]:
+        ps = sorted(ps, key=lambda p: 0 if p.get("text") else 1)     # stabilní řazení: pořadí z registru zůstává
+        docs.append({"zdroj": "priloha", "id": sid, "nazev": ps[0]["nazev"], "cd": c, "datum": "",
+                     "text": ps[0].get("text", ""), "dalsi_texty": [p["text"] for p in ps[1:] if p.get("text")],
+                     "slov": ps[0]["slov"], "meta": None})
     for did in vazby.get(sid, []):
         dd = Z.get(did)
         if not dd or not dd["platna"]:
