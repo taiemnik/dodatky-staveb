@@ -42,6 +42,11 @@ def pasmo(cena):
 
 
 exporty = nacti(EXPORTY)
+# porovnávat jen města, která už sběr má (průběžný stav): jméno souboru je rs_<IČO>.jsonl.gz
+stazena_mesta = {s.name[3:11] for s in API_DATA.glob("rs_*.jsonl.gz")}
+vsech = len(exporty)
+exporty = [r for r in exporty if r["mesto_ico"].zfill(8) in stazena_mesta]
+print(f"měst ve sběru: {len(stazena_mesta)} | smluv z exportů za tato města: {len(exporty)} z {vsech}")
 v_kohorte_api = {r["ids"] for r in nacti(API_KOHORTA)}
 
 # všechny záznamy, které API vrátilo (i ty, které do kohorty neprošly – jiný rok, nižší cena, dodatek)
