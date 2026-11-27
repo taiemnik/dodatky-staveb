@@ -33,6 +33,9 @@ ARGS = [a for a in sys.argv[1:] if not a.startswith("--")]
 MAX_MEST = int(ARGS[0]) if ARGS else 10 ** 6
 # --pockej=MIN: před prvním dotazem počkat (když předchozí běh skončil na hodinovém limitu)
 POCKEJ = next((int(a.split("=")[1]) for a in sys.argv[1:] if a.startswith("--pockej=")), 0)
+# --konec-pri-limitu: po vyčerpání hodinového limitu nečekat a skončit (jeden běh = jeden „kus“ sběru;
+#                     po něm se přepočítá a zveřejní stránka a pustí se další kus)
+KONEC_PRI_LIMITU = "--konec-pri-limitu" in sys.argv
 CEKANI_NA_LIMIT = 65 * 60        # API po zhruba tisíci dotazech za hodinu vrací 429; čekáme hodinu a kousek
 KATEGORIE = ("statutární město", "obec III. typu", "obec II. typu")
 OD_ROKU = 2022                    # hloubka sběru: smlouvy a dodatky podepsané od tohoto roku (zadání z 26. 11. 2026)
@@ -139,8 +142,10 @@ try:
             except Limit:
                 # limit tarifu se neobchází: počkáme a město zkusíme znovu. Když limit přijde hned po čekání,
                 # je nejspíš denní – pak skončíme a pokračuje se další den (hotová města se přeskočí).
-                if volani - volani_pri_cekani < 30:
+                if volani - volani_pri_cekani < 30 and not (KONEC_PRI_LIMITU and volani_pri_cekani < 0):
                     raise Stop(f"limit API i po čekání (celkem {volani} volání) – nejspíš denní, pokračovat další den")
+                if KONEC_PRI_LIMITU:
+                    raise Stop(f"limit API po {volani} voláních – konec kusu")
                 log(f"limit API po {volani} voláních, čekám {CEKANI_NA_LIMIT // 60} minut")
                 time.sleep(CEKANI_NA_LIMIT)
                 volani_pri_cekani = volani
