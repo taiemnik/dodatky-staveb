@@ -73,6 +73,9 @@ for r in exporty:
     po_pasmu[pasmo(cislo(r["cena_puvodni"]))][s] += 1
 
 n = len(exporty)
+# souhrn pro stránku (web_build.py ho vloží do meta.uplnost): kolik měst, kolik smluv z exportů a kolik z nich sběr má
+(API_KOHORTA.parent / "uplnost.json").write_text(json.dumps(
+    {"mest": len(stazena_mesta), "smluv": n, "nalezeno": stav["v kohortě z API"], "nevraceno": stav["API nevrátilo"]}), encoding="utf-8")
 print(f"kohorta z exportů registru: {n} smluv ({EXPORTY.name})")
 for s, k in stav.most_common():
     print(f"  {s}: {k} = {100 * k / n:.1f} %")

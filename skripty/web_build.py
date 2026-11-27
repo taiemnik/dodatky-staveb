@@ -176,9 +176,14 @@ _zz = [(float(r["zmena_pct"]), (float(r["cena_konecna_lehka"]) / float(r["cena_p
 presnost = {"smluv": len(_zz), "pasmo": sum(1 for a, b in _zz if _pasmo(a) == _pasmo(b)),
             "skut20": sum(1 for a, b in _zz if a >= 20), "najde20": sum(1 for a, b in _zz if a >= 20 and b >= 20)}
 
+# kontrola úplnosti sběru přes API (píše ji skripty/uplnost_api.py): kolik smluv známých z exportů registru sběr našel
+_upl = KOREN / "data" / "cr_api" / "uplnost.json"
+uplnost = json.loads(_upl.read_text(encoding="utf-8")) if "api" in KOHORTA and _upl.exists() else None
+
 DATA = {
     "meta": {"sestaveno": date.today().isoformat(), "mesto": MESTO, "prah_mesto": PRAH_MESTO, "rok_do": ROK_DO,
              "s_detailem": not BEZ_DETAILU, "presnost": presnost, "zdroj": "api" if "api" in KOHORTA else "exporty",
+             "uplnost": uplnost,
              "mest_v_datech": len({r["mesto_ico"] for r in K}), "mest_celkem": sum(1 for o in OBCE.values() if o.get("kategorie") in KATEGORIE), "mesice_exportu": sorted(Path(f).name[3:10] for f in glob.glob(str(KOREN / "data/rs/*.stat.json")))},
     "vzorek": vzorek, "vz": vz, "mesto": mesto, "duvody": duvody, "druhy": SEZNAM_DRUHU, "povahy": SEZNAM_POVAH,
     "cr": cr, "kraje": kraje, "mesta": mesta, "kategorie": KATEGORIE, "pokryti": pokryti, "zdroje": ZDROJE, "pasma_mest": PASMA_MEST,

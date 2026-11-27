@@ -65,7 +65,7 @@ footer{color:var(--text-muted);font-size:12px;margin-top:24px}
 <header>
   <h1>O kolik městům narůstá cena staveb přes dodatky</h1>
   <p class="lead">Srovnání měst nad Registrem smluv: stavební smlouvy statutárních měst a obcí III. a II. typu, jejich dodatky a konečná cena. Jednotkou je stavební akce – smlouva o dílo a všechny její dodatky. Změna se počítá proti ceně v původní smlouvě, bez DPH.</p>
-  <div class="varovani" id="oprava-dat" style="border-width:2px"><b>27. 11. 2026: data se stahují znovu, města přibývají postupně.</b> První sběr přes API ztrácel chybou ve stránkování zhruba čtvrtinu záznamů a byl celý nahrazen. Části „Moje město“ a „Všechna města“ jsou už z opraveného sběru, zatím jen za hotová města (jejich počet je uveden níže); dokud nejsou všechna, průměry se budou měnit. Kontrola úplnosti z 27. 11.: z 200 stavebních smluv prvních 11 měst známých z exportů registru jich opravený sběr našel 178. Zbylé smlouvy Hlídač státu nevede v oboru stavebnictví, takže se k nim sběr nedostane. „Kopřivnice do hloubky“ byla doplněna o 4 smlouvy a o dodatky přiložené k původní smlouvě pod názvem typu „D1.pdf“. Ověřovacího vzorku z roku 2023 se oprava netýká.</div>
+  <div class="varovani" id="oprava-dat" style="border-width:2px"><b>27. 11. 2026: data se stahují znovu, města přibývají postupně.</b> První sběr přes API ztrácel chybou ve stránkování zhruba čtvrtinu záznamů a byl celý nahrazen. Části „Moje město“ a „Všechna města“ jsou už z opraveného sběru, zatím jen za hotová města (jejich počet je uveden níže); dokud nejsou všechna, průměry se budou měnit. <span id="uplnost-veta"></span>„Kopřivnice do hloubky“ byla doplněna o 4 smlouvy a o dodatky přiložené k původní smlouvě pod názvem typu „D1.pdf“. Ověřovacího vzorku z roku 2023 se oprava netýká.</div>
   <div class="varovani"><b>Pilot, ne hotová statistika.</b> Čísla vznikla 25. 11. 2026 automatickým čtením smluv a dodatků. Dodatky, u kterých se cena z textu a hodnota v registru neshodly, jsou vedené jako „neurčeno“ a do výsledků se nepočítají. Než z čísel uděláte závěr o konkrétní stavbě, otevřete si její záznam.</div>
 </header>
 <nav class="pozn" style="margin-top:14px">Na stránce: <a href="#kohorta">moje město</a> · <a href="#vsechna">všechna města</a> · <a href="#smlouvy">smlouvy ke kontrole</a> · <a href="#typy">standard podle typu stavby</a> · <a href="#vzorek">ověřovací vzorek</a> · <a href="#mesto">Kopřivnice do hloubky</a> · <a href="#metoda">metoda</a></nav>
@@ -376,6 +376,11 @@ function razeni(el, radky) {
   const PAS = [['1–2 mil. Kč', 1e6, 2e6], ['2–5 mil. Kč', 2e6, 5e6], ['5–20 mil. Kč', 5e6, 2e7], ['20–50 mil. Kč', 2e7, 5e7], ['50 mil. Kč a víc', 5e7, 1e15]];
   const STR = 50, roky = [...new Set(R.map(r => r.rok))].sort(), v = D.vzorek.celek, pr = D.meta.presnost, pk = D.pokryti['obec II. typu'];
   let strana = 0;
+  // kontrola úplnosti sběru (počítá skripty/uplnost_api.py proti exportům registru)
+  const up = D.meta.uplnost;
+  if (up && $('uplnost-veta')) $('uplnost-veta').textContent = `Kontrola úplnosti: z ${up.smluv} stavebních smluv ${up.mest} hotových měst, `
+    + `které známe z exportů registru, jich sběr našel ${up.nalezeno} (${cs(up.nalezeno / up.smluv * 100, 0)} %). `
+    + `Zbylé Hlídač státu většinou nevede v oboru stavebnictví, takže se k nim sběr nedostane. `;
   $('k-var').innerHTML = D.meta.zdroj === 'api'
     ? (D.meta.mest_v_datech < D.meta.mest_celkem * 0.9 ? `<b>Sběr dat ještě běží: zatím ${D.meta.mest_v_datech} z ${D.meta.mest_celkem} měst.</b> Průměry „všech měst“ se proto budou měnit. ` : '') + `<b>Čísla jen z vyplněných polí registru, bez čtení dodatků.</b> Data: API Hlídače státu, stavební smlouvy nad 1 mil. Kč s DPH podepsané od roku ${Math.min(...roky)}, sběr ${D.meta.sestaveno.split('-').reverse().map(Number).join('. ')}. `
       + `Na ${pr.smluv} smlouvách s cenou ověřenou z textu trefila tato metoda pásmo změny u ${cs(pr.pasmo / pr.smluv * 100, 0)} % a našla ${pr.najde20} z ${pr.skut20} nárůstů nad 20 %. `
