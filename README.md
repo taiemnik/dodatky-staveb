@@ -2,7 +2,7 @@
 
 O kolik městům narůstá cena staveb přes dodatky ke smlouvě o dílo? Pilot nad Registrem smluv: řetěz smlouva → dodatky → konečná cena, srovnání měst, krajů a velikostí zakázek.
 
-**Stav: pilot z 25. 11. 2026.** Čísla vznikla automatickým čtením smluv a dodatků a nejsou ručně ověřená. Dashboard: `docs/index.html`.
+**Stav: pilot z 25. 11. 2026.** Čísla vznikla automatickým čtením smluv a dodatků a nejsou ručně ověřená. Dashboard: `docs/index.html`. Plný sběr metadat za 388 měst přes API Hlídače státu je hotový od 28. 11. 2026 (kapitola „Plný sběr přes API Hlídače státu“).
 
 ## Co pilot ukázal
 
@@ -33,7 +33,7 @@ Samotné procento klame: u zakázky za 1 mil. Kč je +300 tis. Kč „abnormáln
 
 ### Typ města
 
-Kategorie podle typu úřadu: statutární město (26) · obec III. typu (179) · obec II. typu (183); malé obce a Praha se neberou. **Obce II. typu z registru srovnávat nejde** – smlouvy uveřejňovat nemusí a v pěti stažených měsících je jen 14 stavebních smluv ze 6 obcí ze 183. Ve vzorku ČR: statutární města 30 smluv, nárůst 20 % a víc u 1; obce III. typu 51 smluv, u 6.
+Kategorie podle typu úřadu: statutární město (26) · obec III. typu (179) · obec II. typu (183); malé obce a Praha se neberou. **Obce II. typu z registru srovnávat nejde** – smlouvy uveřejňovat nemusí (zákon o registru smluv, § 3 odst. 2 písm. k) a v pěti stažených měsících je jen 14 stavebních smluv ze 6 obcí ze 183. Plný sběr přes API to potvrdil: za roky 2022–2025 má stavební smlouvu v registru 17 obcí ze 183 (126 smluv). Ve vzorku ČR: statutární města 30 smluv, nárůst 20 % a víc u 1; obce III. typu 51 smluv, u 6.
 
 ### Stačí metadata?
 
@@ -57,6 +57,22 @@ Ne na přesnou cenu, ano jako síto. Na 192 smlouvách s cenou ověřenou z text
 | mosty a lávky | +8,5 % (7) | málo smluv |
 
 Skupiny mají jednotky až desítky smluv – je to směr, ne norma. Na normu pro „města typu X a stavby typu Y“ je potřeba plný sběr.
+
+## Plný sběr přes API Hlídače státu (27.–28. 11. 2026)
+
+Stavební smlouvy (`oblast:stav`) nad 1 mil. Kč s DPH podepsané od roku 2022 a k nim navázané dodatky, jen metadata. Tabulka je kohorta pro dashboard: podpis 2022–2025, cena od 1 mil. Kč bez DPH.
+
+| Typ města | Měst | Měst se stavební smlouvou | Smluv |
+|---|---|---|---|
+| statutární město | 26 | 26 | 4 133 |
+| obec III. typu | 179 | 179 | 6 131 |
+| obec II. typu | 183 | 17 | 126 |
+| celkem | 388 | 222 | 10 390 |
+
+- **Rozsah:** 46 677 záznamů (30 169 záznamů stavebních smluv a 16 508 navázaných dodatků), zhruba 5 100 dotazů tempem jeden za 4 sekundy. U žádného města nezůstal dotaz neúplný.
+- **Kontrola úplnosti proti exportům registru:** z 1 154 stavebních smluv roku 2023 známých z pěti stažených měsíců sběr našel 1 002 (86,8 %). Zbylé Hlídač většinou nevede v oboru stavebnictví; část z nich stavbou není (např. smlouvy o společném zadávání).
+- **Výpadek API 27. 11. (zhruba 11:40–18:20):** hledání vracelo HTTP 400 na každý dotaz a detail známé smlouvy 404. Sběr se po třech chybách zastaví sám. Po obnově nestačí stav 200 – index se může teprve plnit a kontrola proti `total` by to nepoznala. Sběr se proto pouští až po dotazu se známým výsledkem (stavební smlouvy Kopřivnice: 145 záznamů).
+- **Po dalším sběru:** `bash skripty/aktualizuj.sh` přepočítá kohortu, kontrolu úplnosti a stránku a uloží commit. Odeslání na GitHub je zvlášť, po kontrole toho, co odchází.
 
 ## Zdroje dat
 
@@ -98,6 +114,7 @@ Spouštět z kořene repa. Python vždy s `-I` (zpracovává stažená data).
 | `skripty/rs_kohorta.py`, `rs_souhrn.py` | „lehká metoda“: stavební smlouvy měst podepsané v daném roce, dodatky a změna ceny jen z metadat; vrstvené tabulky |
 | `skripty/hs_api.py`, `api_sber.py` | API Hlídače s tokenem z `.env`; plný sběr metadat stavebních smluv a dodatků 388 měst od roku 2022 do `data/rs_api2/` (jeden dotaz za 4 s, jde přerušit a pustit znovu; u každého města kontroluje úplnost) |
 | `skripty/uplnost_api.py` | kolik smluv známých z exportů registru sběr přes API nenajde – kontrola úplnosti po každém sběru |
+| `skripty/aktualizuj.sh` | po dalším kusu sběru: kohorta 2022–2025, kontrola úplnosti, stránka a commit (push zvlášť) |
 | `skripty/hs_hledej.py` | hledání na Hlídači dotazovacím jazykem → CSV |
 | `skripty/pilot_mesto.py` | pro seznam smluv stáhne detaily, nejstarší verzi záznamu, navázané dodatky a texty dodatků |
 | `skripty/pilot_dopln_api.py`, `pravidla.py` | doplní pilot přes API: záznamy, které seznam z webu vynechal, a dodatky přiložené k původní smlouvě pod názvem `D1`, `DOD_1` (ověří je nadpisem v textu) |
@@ -173,7 +190,8 @@ Stažené exporty leží v `data/rs/` zabalené (`.jsonl.gz`); před výpočtem 
 
 ## Známá slabá místa
 
-- **Plný sběr z otevřených dat registru se nepovedl.** Server `data.smlouvy.gov.cz` 25. 11. po zhruba 1,5 GB přenosů přestal odpovídat a 26. 11. shodil i dva souběžné přenosy do dvou minut. Stahování je zastavené. Cesty dál: API Hlídače státu s tokenem, nebo jedno pomalé spojení po malých dávkách přes více dní.
+- **Plný sběr z otevřených dat registru se nepovedl.** Server `data.smlouvy.gov.cz` 25. 11. po zhruba 1,5 GB přenosů přestal odpovídat a 26. 11. shodil i dva souběžné přenosy do dvou minut. Stahování je zastavené. Plný sběr proto proběhl přes API Hlídače státu; pět stažených měsíců exportů slouží jako nezávislá kontrola jeho úplnosti.
+- **Sběr přes API nenajde zhruba 13 % stavebních smluv** – Hlídač je nevede v oboru stavebnictví, takže dotazu `oblast:stav` nevyhoví. API také nevrací starší verze záznamu (výchozí cena přepsaná městem vychází jako menší změna) a hodnota dodatku nemá znaménko.
 
 - **Čtení cen je vyladěné na kopřivnické šablony dodatků.** Tam se cena z textu shodla s registrem u 71 ze 72 dodatků, u jiných měst zatím jen u 73 z 87. Rozpory jsou vyřazené, takže vzorek ČR má méně smluv s jistou cenou (85 z 97).
 - **Lehká metoda je dolní mez.** Stažených měsíců je pět (4, 6, 7, 8/2023 a 10/2024); ze 58 smluv vzorku s dodatkem jich zachytila 14.
