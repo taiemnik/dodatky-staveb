@@ -58,6 +58,15 @@ ul{margin:6px 0;padding-left:20px}
 button{font:inherit;padding:6px 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface-1);color:var(--text-primary);cursor:pointer}
 button:disabled{opacity:.45;cursor:default}
 footer{color:var(--text-muted);font-size:12px;margin-top:24px}
+/* ruční kontrola: karta smlouvy s otázkami */
+.kt-karta{border:1px solid var(--line);border-radius:8px;padding:12px;margin-top:10px}
+.kt-karta h4{margin:0 0 4px;font-size:15px}
+.kt-otazky{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin:10px 0}
+fieldset{border:0;padding:0;margin:0;min-width:0}
+legend{padding:0;font-size:13px;color:var(--text-secondary);margin-bottom:3px}
+.kt-otazky label{margin-right:12px;white-space:nowrap}
+.kt-in,textarea{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--surface-1);color:var(--text-primary)}
+.kt-stav{font-size:12px;font-weight:400;border:1px solid var(--line);border-radius:10px;padding:1px 8px;margin-left:8px;color:var(--text-secondary);white-space:nowrap}
 </style>
 </head>
 <body class="viz-root">
@@ -68,7 +77,7 @@ footer{color:var(--text-muted);font-size:12px;margin-top:24px}
   <div class="varovani" id="oprava-dat" style="border-width:2px"><b>27. 11. 2026: data byla stažena znovu.</b> První sběr přes API ztrácel chybou ve stránkování zhruba čtvrtinu záznamů a byl celý nahrazen. Části „Moje město“ a „Všechna města“ jsou z opraveného sběru. <span id="oprava-bezi"></span><span id="uplnost-veta"></span>„Kopřivnice do hloubky“ byla doplněna o 4 smlouvy a o dodatky přiložené k původní smlouvě pod názvem typu „D1.pdf“. Ověřovacího vzorku z roku 2023 se oprava netýká.</div>
   <div class="varovani"><b>Pilot, ne hotová statistika.</b> Čísla vznikla 25. 11. 2026 automatickým čtením smluv a dodatků. Dodatky, u kterých se cena z textu a hodnota v registru neshodly, jsou vedené jako „neurčeno“ a do výsledků se nepočítají. Než z čísel uděláte závěr o konkrétní stavbě, otevřete si její záznam.</div>
 </header>
-<nav class="pozn" style="margin-top:14px">Na stránce: <a href="#kohorta">moje město</a> · <a href="#vsechna">všechna města</a> · <a href="#smlouvy">smlouvy ke kontrole</a> · <a href="#typy">standard podle typu stavby</a> · <a href="#vzorek">ověřovací vzorek</a> · <a href="#mesto">Kopřivnice do hloubky</a> · <a href="#metoda">metoda</a></nav>
+<nav class="pozn" style="margin-top:14px">Na stránce: <a href="#kohorta">moje město</a> · <a href="#vsechna">všechna města</a> · <a href="#smlouvy">smlouvy ke kontrole</a> · <a href="#kontrola">ruční kontrola</a> · <a href="#typy">standard podle typu stavby</a> · <a href="#vzorek">ověřovací vzorek</a> · <a href="#mesto">Kopřivnice do hloubky</a> · <a href="#metoda">metoda</a></nav>
 
 <section class="sekce" id="kohorta">
   <h2>Jak si vede moje město proti ostatním</h2>
@@ -108,6 +117,57 @@ footer{color:var(--text-muted);font-size:12px;margin-top:24px}
   <p class="pozn" id="k-tab-pozn"></p>
   <div class="tab"><table id="k-tab"></table></div>
   <div class="filtry" style="align-items:center"><button id="k-pred" type="button">‹ předchozí</button><span class="pozn" id="k-str"></span><button id="k-dal" type="button">další ›</button></div>
+</section>
+
+<section class="sekce" id="kontrola">
+  <h2>Ruční kontrola: ověřte si čísla sami</h2>
+  <p class="lead">Čísla na této stránce vznikla strojově. Tady je může kdokoli zkontrolovat proti registru: stránka vylosuje smlouvy, vy u každé otevřete záznam a zaškrtnete, co sedí. Odpovědi zůstávají jen ve vašem prohlížeči, dokud protokol sami nepošlete dál.</p>
+  <p class="pozn" id="kt-cekat"></p>
+
+  <h3 style="margin-top:16px">1. Správnost: vylosované smlouvy proti registru</h3>
+  <div class="filtry" style="align-items:flex-end">
+    <label>Město (prázdné = všechna)<input id="kt-mesto" class="kt-in" type="text" list="k-mesta" placeholder="začněte psát…" style="width:200px"></label>
+    <label>Počet smluv<select id="kt-pocet"><option>5</option><option selected>10</option><option>20</option></select></label>
+    <label style="flex-direction:row;align-items:center;gap:6px;font-size:14px;color:var(--text-primary)"><input id="kt-jen-dod" type="checkbox"> jen smlouvy s dodatkem</label>
+    <button id="kt-losuj" type="button">Vylosovat nový vzorek</button>
+  </div>
+  <p class="pozn" id="kt-popis"></p>
+  <div id="kt-karty"></div>
+
+  <h3 style="margin-top:22px">2. Úplnost: smlouvy z vlastní evidence proti stránce</h3>
+  <p class="pozn">Vylosovaný vzorek neodhalí smlouvu, která na stránce chybí. Vezměte proto z vlastní evidence několik smluv o dílo na stavební práce (objednatel město, podpis 2022–2025, cena od 1 mil. Kč bez DPH) a zkuste je tu najít. Hledá se v prvních 90 znacích předmětu smlouvy, bez ohledu na diakritiku.</p>
+  <div class="filtry">
+    <label>Město<input id="kt-n-mesto" class="kt-in" type="text" list="k-mesta" placeholder="začněte psát…" style="width:200px"></label>
+    <label>Text z předmětu smlouvy<input id="kt-n-text" class="kt-in" type="text" placeholder="např. chodník Školní" style="width:260px"></label>
+  </div>
+  <p class="pozn" id="kt-n-popis"></p>
+  <div class="tab" style="max-height:300px"><table id="kt-najdi"></table></div>
+  <div class="filtry">
+    <label>Kolik smluv jste hledali<input id="kt-u-hledano" class="kt-in" type="number" min="0" style="width:120px"></label>
+    <label>Kolik jste jich našli<input id="kt-u-nalezeno" class="kt-in" type="number" min="0" style="width:120px"></label>
+  </div>
+
+  <h3 style="margin-top:22px">3. Protokol</h3>
+  <p id="kt-souhrn"></p>
+  <textarea id="kt-protokol" readonly rows="9" style="width:100%" aria-label="Protokol ruční kontroly"></textarea>
+  <div class="filtry" style="align-items:center">
+    <button id="kt-kopie" type="button">Zkopírovat protokol</button>
+    <button id="kt-csv" type="button">Stáhnout protokol (CSV)</button>
+    <span class="pozn" id="kt-hlaska" role="status"></span>
+  </div>
+  <div class="filtry" style="align-items:flex-end">
+    <label style="flex:1;min-width:260px">Odkaz na tento vzorek – kdo ho otevře, dostane stejné smlouvy<input id="kt-odkaz" class="kt-in" type="text" readonly></label>
+    <button id="kt-odkaz-kopie" type="button">Zkopírovat odkaz</button>
+  </div>
+
+  <details><summary>Jak číst záznam v registru a co tato kontrola neověří</summary>
+    <ul class="pozn">
+      <li><b>Původní cena</b> je hodnota u záznamu původní smlouvy: cena bez DPH, a když v registru chybí, cena s DPH (karta to u smlouvy říká). Nebere se z dodatku.</li>
+      <li><b>Dodatky</b> hledejte třemi cestami. Záznam v Registru smluv má dole oddíl „Navázané záznamy“; tytéž dodatky s předmětem a cenou ukáže odkaz „dodatky na Hlídači státu“ (ceny v jeho seznamu jsou s DPH). Dodatek ale může být i přílohou původního záznamu, nebo samostatným záznamem téhož města a dodavatele bez vazby.</li>
+      <li><b>Konečná cena</b> na stránce je součet z polí registru bez DPH: hodnotu dodatku blízkou ceně smlouvy (od 60 %) bere stránka jako novou celkovou cenu, menší jako rozdíl a přičte ji. Rozhoduje text dodatku v jeho příloze – když uvádí jinou cenu, zaškrtněte „nesedí“ a skutečnou cenu napište do poznámky.</li>
+      <li><b>Co kontrola neověří:</b> kolik se skutečně zaplatilo a proč dodatek vznikl. Průměry a podíly výše jsou jen součty řádků, které tu kontrolujete – když sedí řádky, sedí i ony.</li>
+    </ul>
+  </details>
 </section>
 
 
@@ -175,6 +235,7 @@ footer{color:var(--text-muted);font-size:12px;margin-top:24px}
     <li><b>Srovnání měst</b> bere stavební smlouvy tak, jak je do oboru stavebnictví řadí Hlídač státu. Proti vlastnímu výběru z exportů registru tím zhruba desetina smluv chybí. Úplnost stažení se u každého města kontroluje proti počtu, který hlásí API.</li>
     <li><b>Cena se čte z textu dodatku</b> a přijme se jen tehdy, když čísla vyjdou součtem (dosavadní cena + vícepráce − méněpráce = nová cena) a nejsou v rozporu s hodnotou v registru.</li>
     <li><b>Výchozí cena je z nejstarší verze záznamu.</b> Aktuální verze někdy nese už konečnou cenu.</li>
+    <li><b>Srovnání měst počítá s cenou bez DPH.</b> U <span id="zd-pocet"></span> smluv registr cenu bez DPH nemá; bere se cena s DPH a i hranice 1 mil. Kč se u nich měří jí.</li>
     <li><b>Obrat</b> = vícepráce + méněpráce k původní ceně. Malá čistá změna může skrývat velké přepsání projektu.</li>
   </ul>
   <p><b>Co z toho neplyne:</b> registr ukazuje sjednané ceny, ne zaplacené. Vícepráce zadané jako nová zakázka v řetězu nejsou. Důvod dodatku je vyčtený podle slov v textu, ne posouzený člověkem. Málo dodatků neznamená dobře připravenou stavbu – rezerva může být schovaná v původní ceně.</p>
@@ -371,7 +432,7 @@ function razeni(el, radky) {
 // ---------- 3) Česko z metadat registru: šance na nárůst, procenta × koruny, tabulka ke kontrole ----------
 (function () {
   // řádky na objekty (pořadí polí viz skripty/web_build.py)
-  const R = D.cr.map(r => ({idv: r[0], mesto: D.mesta[r[1]], p: r[2], rok: r[3], kat: r[4], kraj: r[5], obyv: r[6], b: r[7], d: r[8], z: r[9], druh: r[10], povaha: r[11], zdroj: r[12]}));
+  const R = D.cr.map(r => ({idv: r[0], mesto: D.mesta[r[1]], p: r[2], rok: r[3], kat: r[4], kraj: r[5], obyv: r[6], b: r[7], d: r[8], z: r[9], druh: r[10], povaha: r[11], zdroj: r[12], ids: r[13], zd: r[14]}));
   R.forEach(r => { r.kc = r.z == null ? null : r.b * r.z / 100; });
   const PAS = [['1–2 mil. Kč', 1e6, 2e6], ['2–5 mil. Kč', 2e6, 5e6], ['5–20 mil. Kč', 5e6, 2e7], ['20–50 mil. Kč', 2e7, 5e7], ['50 mil. Kč a víc', 5e7, 1e15]];
   const STR = 50, roky = [...new Set(R.map(r => r.rok))].sort(), v = D.vzorek.celek, pr = D.meta.presnost, pk = D.pokryti['obec II. typu'];
@@ -505,6 +566,142 @@ function razeni(el, radky) {
   $('k-pred').addEventListener('click', () => { strana--; kresli(true); });
   $('k-dal').addEventListener('click', () => { strana++; kresli(true); });
   kresli();
+
+  // ---------- ruční kontrola: vylosovaný vzorek smluv, otázky a protokol ----------
+  // Vzorek určuje kód „los-počet-jenSDodatkem-město“: stejný kód dá stejné smlouvy každému, kdo stránku otevře
+  // (losuje se generátorem se zadaným začátkem, ne Math.random). Odpovědi se ukládají jen do prohlížeče kontrolora.
+  $('zd-pocet').textContent = `${R.filter(r => r.zd).length.toLocaleString('cs-CZ')} z ${R.length.toLocaleString('cs-CZ')}`;   // věta v oddílu „Jak čísla vznikla“
+  const KLIC = 'dodatky-staveb:kontrola', kc = x => Math.round(x).toLocaleString('cs-CZ') + ' Kč';
+  const sest = D.meta.sestaveno.split('-').reverse().map(Number).join('. ');
+  const bezDia = s => s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+  const VOLBY = [['s', 'sedí'], ['n', 'nesedí'], ['x', 'nevím']], STAVY = {ok: 'bez výhrad', vyhrada: 's výhradou', neurceno: 'neurčeno'};
+  // '' = město nezadáno, null = zadané město v datech není
+  const hledaneMesto = t => { const j = t.trim().toLowerCase(); return j ? (D.mesta.find(m => m.toLowerCase() === j) || D.mesta.find(m => m.toLowerCase().startsWith(j)) || null) : ''; };
+  let pamet = {posledni: '', vzorky: {}}, akt = {kod: '', mesto: '', jd: false, pop: 0, radky: []};
+  try { const p = JSON.parse(localStorage.getItem(KLIC)); if (p && p.vzorky) pamet = p; } catch (e) { /* prohlížeč bez úložiště: kontrola funguje, jen si nic nepamatuje */ }
+  const uloz = () => { try { localStorage.setItem(KLIC, JSON.stringify(pamet)); } catch (e) { /* viz výše */ } };
+  const zaznam = () => pamet.vzorky[akt.kod] || (pamet.vzorky[akt.kod] = {odp: {}, hledano: '', nalezeno: ''});
+  const odp = r => zaznam().odp[r.idv] || (zaznam().odp[r.idv] = {});
+
+  function otazky(r) {                                   // otázky se řídí tím, co stránka o smlouvě tvrdí
+    const o = [['q1', 'smlouva', 'Je to stavební zakázka tohoto města z uvedeného roku?'], ['q2', 'původní cena', 'Souhlasí původní cena se záznamem smlouvy?'],
+      ['q3', 'počet dodatků', r.d ? `Má smlouva právě tolik dodatků (${r.d})?` : 'Opravdu nemá žádný dodatek?']];
+    if (r.d) o.push(['q4', 'konečná cena', r.z == null ? 'Je dodatek v registru opravdu bez ceny?' : 'Odpovídá konečná cena textu posledního dodatku?']);
+    return o;
+  }
+  function hodnoceni(r) {                                // null = rozpracováno; jedno „nesedí“ = s výhradou, jinak jedno „nevím“ = neurčeno
+    const v = otazky(r).map(([q]) => odp(r)[q]);
+    return v.some(x => !x) ? null : v.includes('n') ? 'vyhrada' : v.includes('x') ? 'neurceno' : 'ok';
+  }
+  function mulberry(a) {                                 // malý generátor náhodných čísel se zadaným začátkem (mulberry32)
+    return () => { a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  }
+  function vylosuj(kod) {                                // smlouvy seřadit podle ID (pevné pořadí), zamíchat generátorem, vzít prvních n
+    const [los, n, jd, ...zb] = kod.split('-'), mesto = zb.join('-'), rnd = mulberry(+los);
+    const pop = R.filter(r => (!mesto || r.mesto === mesto) && (jd !== '1' || r.d > 0)).sort((a, b) => a.idv - b.idv);
+    for (let i = pop.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [pop[i], pop[j]] = [pop[j], pop[i]]; }
+    return {kod, mesto, jd: jd === '1', pop: pop.length, radky: pop.slice(0, +n)};
+  }
+  const konecna = r => r.z == null ? 'neznámá' : `${kc(r.b + r.kc)} (${pct(r.z)})`;
+  function kresliKontrolu() {
+    $('kt-popis').textContent = akt.radky.length
+      ? `Vzorek ${akt.kod}: ${akt.radky.length} náhodně vylosovaných smluv z ${akt.pop.toLocaleString('cs-CZ')} (${akt.mesto || 'všechna města'}${akt.jd ? ', jen s dodatkem' : ''}), data stránky z ${sest}.`
+      : 'Výběru neodpovídá žádná smlouva.';
+    $('kt-karty').innerHTML = akt.radky.map((r, i) => {
+      const o = odp(r), h = hodnoceni(r);
+      return `<div class="kt-karta"><h4>${i + 1}. ${esc(r.mesto)} – ${esc(r.p)} (${r.rok})<span class="kt-stav" id="kt-s-${r.idv}">${h ? STAVY[h] : 'rozpracováno'}</span></h4>`
+        + `<div>Stránka tvrdí: původní cena <b>${kc(r.b)}</b> ${r.zd ? 's DPH (cena bez DPH v registru chybí)' : 'bez DPH'} · dodatků <b>${r.d}</b> · `
+        + (r.d ? `konečná cena <b>${konecna(r)}</b>${r.z == null ? ' – dodatek je v registru bez ceny' : ''}` : 'cena se nezměnila') + `</div>`
+        + `<div class="pozn">Otevřít: <a href="https://smlouvy.gov.cz/smlouva/${r.idv}" target="_blank" rel="noopener">záznam v Registru smluv</a> · <a href="https://www.hlidacstatu.cz/Detail/${r.idv}" target="_blank" rel="noopener">záznam na Hlídači státu</a> · `
+        + `<a href="https://www.hlidacstatu.cz/HledatSmlouvy?Q=${encodeURIComponent('navazanyZaznam:' + r.ids)}" target="_blank" rel="noopener">dodatky na Hlídači státu</a></div>`
+        + `<div class="kt-otazky">` + otazky(r).map(([q, , text]) => `<fieldset><legend>${esc(text)}</legend>`
+          + VOLBY.map(([v, n]) => `<label><input type="radio" name="kt-${r.idv}-${q}" data-idv="${r.idv}" data-q="${q}" value="${v}"${o[q] === v ? ' checked' : ''}> ${n}</label>`).join('') + `</fieldset>`).join('') + `</div>`
+        + `<label class="pozn" style="display:flex;gap:8px;align-items:center">Poznámka<input class="kt-in" type="text" data-idv="${r.idv}" data-q="pozn" value="${esc(o.pozn || '')}" placeholder="co nesedí, skutečná hodnota, odkaz…" style="flex:1"></label></div>`;
+    }).join('');
+  }
+  const volba = (o, q) => (VOLBY.find(v => v[0] === o[q]) || ['', ''])[1];
+  function protokol() {                                  // souhrn + text protokolu; volá se po každé změně odpovědi
+    const z = zaznam(), h = akt.radky.map(hodnoceni), c = k => h.filter(x => x === k).length;
+    const souhrn = `zkontrolováno ${h.filter(Boolean).length} z ${akt.radky.length} smluv · bez výhrad ${c('ok')} · s výhradou ${c('vyhrada')} · neurčeno ${c('neurceno')}`;
+    const upl = z.hledano !== '' && z.nalezeno !== '' ? `z vlastní evidence hledáno ${z.hledano} smluv, na stránce nalezeno ${z.nalezeno}` : 'nevyplněno';
+    const text = [`Ruční kontrola – Dodatky stavebních zakázek měst (${location.href.split('#')[0]})`,
+      `Vzorek ${akt.kod} · ${akt.mesto || 'všechna města'}${akt.jd ? ' · jen s dodatkem' : ''} · data stránky z ${sest} · kontrola ${new Date().toLocaleDateString('cs-CZ')}`,
+      `Správnost: ${souhrn}`, `Úplnost: ${upl}`, '',
+      ...akt.radky.map((r, i) => { const o = odp(r);
+        return `${i + 1}. ${r.mesto} – ${r.p} (${r.rok}) · https://smlouvy.gov.cz/smlouva/${r.idv}\n`
+          + `   stránka: původní cena ${kc(r.b)} ${r.zd ? 's DPH' : 'bez DPH'}, dodatků ${r.d}` + (r.d ? `, konečná cena ${konecna(r)}` : '') + `\n`
+          + `   kontrola: ` + otazky(r).map(([q, nazev]) => `${nazev} ${volba(o, q) || '–'}`).join(' · ') + (o.pozn ? `\n   poznámka: ${o.pozn}` : ''); })].join('\n');
+    $('kt-souhrn').textContent = `Správnost: ${souhrn}. Úplnost: ${upl}.`;
+    $('kt-protokol').value = text;
+    return text;
+  }
+  function csvProtokol() {                               // stejný obsah po řádcích pro Excel (středník, uvozovky zdvojené)
+    const z = zaznam(), u = x => '"' + String(x ?? '').replace(/"/g, '""') + '"', dnes = new Date().toISOString().slice(0, 10);
+    const hl = ['vzorek', 'data_stranky', 'datum_kontroly', 'poradi', 'id_verze', 'mesto', 'predmet', 'rok', 'puvodni_cena', 'zaklad_ceny', 'dodatku', 'konecna_cena', 'zmena_pct',
+      'smlouva', 'puvodni_cena_kontrola', 'pocet_dodatku_kontrola', 'konecna_cena_kontrola', 'vysledek', 'poznamka', 'uplnost_hledano', 'uplnost_nalezeno'];
+    return [hl.join(';'), ...akt.radky.map((r, i) => { const o = odp(r);
+      return [akt.kod, D.meta.sestaveno, dnes, i + 1, r.idv, r.mesto, r.p, r.rok, Math.round(r.b), r.zd ? 's DPH' : 'bez DPH', r.d, r.z == null ? '' : Math.round(r.b + r.kc), r.z == null ? '' : String(r.z).replace('.', ','),
+        volba(o, 'q1'), volba(o, 'q2'), volba(o, 'q3'), r.d ? volba(o, 'q4') : 'netýká se', STAVY[hodnoceni(r)] || 'rozpracováno', o.pozn || '', z.hledano, z.nalezeno].map(u).join(';'); })].join('\r\n');
+  }
+  function najdi() {                                     // úplnost: hledání smlouvy města podle textu v předmětu
+    const m = hledaneMesto($('kt-n-mesto').value), t = bezDia($('kt-n-text').value.trim()), el = $('kt-najdi');
+    const vse = m ? R.filter(r => r.mesto === m) : [], nal = t.length < 3 ? [] : vse.filter(r => bezDia(r.p).includes(t)).sort((a, b) => b.rok - a.rok || b.b - a.b);
+    $('kt-n-popis').textContent = m === null ? 'Takové město v datech není.' : !m ? ''
+      : `${m}: na stránce ${vse.length} smluv` + (t.length < 3 ? '. Napište aspoň tři písmena z předmětu smlouvy.' : `, hledanému textu odpovídá ${nal.length}.`);
+    el.parentNode.style.display = nal.length ? '' : 'none';
+    el.innerHTML = nal.length ? '<tr><th>Zdroj záznamu</th><th>Smlouva</th><th class="c">Rok</th><th class="c">Původní cena</th><th class="c">Dodatků</th><th class="c">Změna</th></tr>'
+      + nal.slice(0, 40).map(r => `<tr><td><a href="https://www.hlidacstatu.cz/Detail/${r.idv}" target="_blank" rel="noopener">Hlídač státu</a> · <a href="https://smlouvy.gov.cz/smlouva/${r.idv}" target="_blank" rel="noopener">registr</a></td>`
+        + `<td>${esc(r.p)}</td><td class="c">${r.rok}</td><td class="c">${mil(r.b)}</td><td class="c">${r.d}</td><td class="c">${r.z == null ? '?' : pct(r.z)}</td></tr>`).join('') : '';
+  }
+  function nastav(kod) {                                 // přepne na vzorek daného kódu a obnoví k němu uložené odpovědi
+    akt = vylosuj(kod); pamet.posledni = kod; uloz();
+    const z = zaznam();
+    $('kt-mesto').value = akt.mesto; $('kt-pocet').value = kod.split('-')[1]; $('kt-jen-dod').checked = akt.jd;
+    $('kt-u-hledano').value = z.hledano; $('kt-u-nalezeno').value = z.nalezeno;
+    $('kt-odkaz').value = location.href.split('#')[0] + '#kontrola=' + encodeURIComponent(kod);
+    $('kt-hlaska').textContent = '';
+    kresliKontrolu(); protokol();
+  }
+  async function kopiruj(text, pole) {                   // schránka; kde ji prohlížeč nedovolí, aspoň označí text k ručnímu zkopírování
+    try { await navigator.clipboard.writeText(text); $('kt-hlaska').textContent = 'Zkopírováno do schránky.'; }
+    catch (e) { pole.focus(); pole.select(); $('kt-hlaska').textContent = 'Text je označený – zkopírujte ho klávesami Ctrl+C.'; }
+  }
+  $('kt-cekat').innerHTML = `<b>Co čekat.</b> Smlouva, původní cena a počet navázaných dodatků jsou opsané z registru a měly by sedět skoro vždy; kdyby neseděla víc než jedna smlouva z deseti, je chyba ve sběru. `
+    + `Konečná cena je odhad z polí registru: na ${pr.smluv} smlouvách s cenou přečtenou z textu dodatků trefil pásmo změny u ${cs(pr.pasmo / pr.smluv * 100, 0)} %. `
+    + (up ? `Sběr našel ${cs(up.nalezeno / up.smluv * 100, 0)} % smluv známých z exportů registru, takže zhruba ${cs(100 - up.nalezeno / up.smluv * 100, 0)} % smluv z vlastní evidence tu nejspíš nenajdete.` : '');
+  $('kt-karty').addEventListener('change', e => {
+    const t = e.target; if (t.type !== 'radio') return;
+    const r = akt.radky.find(x => x.idv === t.dataset.idv);
+    odp(r)[t.dataset.q] = t.value; uloz();
+    const h = hodnoceni(r);
+    $('kt-s-' + r.idv).textContent = h ? STAVY[h] : 'rozpracováno'; protokol();
+  });
+  $('kt-karty').addEventListener('input', e => {
+    const t = e.target; if (t.dataset.q !== 'pozn') return;
+    odp(akt.radky.find(x => x.idv === t.dataset.idv)).pozn = t.value; uloz(); protokol();
+  });
+  ['hledano', 'nalezeno'].forEach(k => $('kt-u-' + k).addEventListener('input', e => { zaznam()[k] = e.target.value; uloz(); protokol(); }));
+  ['kt-n-mesto', 'kt-n-text'].forEach(i => $(i).addEventListener('input', najdi));
+  $('kt-losuj').addEventListener('click', () => {
+    const m = hledaneMesto($('kt-mesto').value);
+    if (m === null) { $('kt-popis').textContent = 'Takové město v datech není.'; return; }
+    nastav(`${Math.floor(Math.random() * 9000) + 1000}-${$('kt-pocet').value}-${$('kt-jen-dod').checked ? 1 : 0}-${m}`);
+  });
+  $('kt-kopie').addEventListener('click', () => kopiruj(protokol(), $('kt-protokol')));
+  $('kt-odkaz-kopie').addEventListener('click', () => kopiruj($('kt-odkaz').value, $('kt-odkaz')));
+  $('kt-csv').addEventListener('click', () => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([String.fromCharCode(0xFEFF) + csvProtokol()], {type: 'text/csv;charset=utf-8'}));   // značka BOM, aby Excel poznal UTF-8
+    a.download = `kontrola-${akt.kod.split('-').slice(0, 3).join('-')}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+  });
+  // start: vzorek z odkazu (#kontrola=kód), jinak naposledy rozpracovaný, jinak nový los ze všech měst
+  const platny = k => /^\d{1,9}-(5|10|20)-[01]-/.test(k);
+  let zOdkazu = '';
+  try { zOdkazu = decodeURIComponent((location.hash.match(/^#kontrola=(.+)$/) || [])[1] || ''); } catch (e) { /* poškozený odkaz: začne se novým losem */ }
+  nastav(platny(zOdkazu) ? zOdkazu : platny(pamet.posledni) ? pamet.posledni : `${Math.floor(Math.random() * 9000) + 1000}-10-0-`);
+  najdi();
+  if (platny(zOdkazu)) $('kontrola').scrollIntoView();
 })();
 
 // ---------- patička a bublina s nápovědou ----------

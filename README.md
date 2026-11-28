@@ -74,6 +74,26 @@ Stavební smlouvy (`oblast:stav`) nad 1 mil. Kč s DPH podepsané od roku 2022 a
 - **Výpadek API 27. 11. (zhruba 11:40–18:20):** hledání vracelo HTTP 400 na každý dotaz a detail známé smlouvy 404. Sběr se po třech chybách zastaví sám. Po obnově nestačí stav 200 – index se může teprve plnit a kontrola proti `total` by to nepoznala. Sběr se proto pouští až po dotazu se známým výsledkem (stavební smlouvy Kopřivnice: 145 záznamů).
 - **Po dalším sběru:** `bash skripty/aktualizuj.sh` přepočítá kohortu, kontrolu úplnosti a stránku a uloží commit. Odeslání na GitHub je zvlášť, po kontrole toho, co odchází.
 
+## Ruční kontrola (ověření člověkem)
+
+Stránka má oddíl „Ruční kontrola“ (`docs/index.html#kontrola`). Slouží k tomu, aby čísla ověřil někdo jiný než autor – kolega z investic, z jiného města, kdokoli.
+
+1. **Správnost (od stránky k registru).** Stránka vylosuje 5, 10 nebo 20 smluv – ze všech měst, z jednoho města, případně jen smlouvy s dodatkem. U každé ukáže, co tvrdí (původní cena, počet dodatků, konečná cena), a odkazy na záznam v Registru smluv, na Hlídači státu a na seznam dodatků. Kontrolor u každé smlouvy odpoví na tři až čtyři otázky: sedí · nesedí · nevím.
+2. **Úplnost (od vlastní evidence ke stránce).** Vylosovaný vzorek neodhalí smlouvu, která na stránce chybí. Kontrolor proto vezme několik smluv z vlastní evidence, hledá je podle města a textu v předmětu a zapíše, kolik jich našel.
+3. **Protokol.** Souhrn a odpovědi jdou zkopírovat jako text nebo stáhnout jako CSV (středník, UTF-8). Odpovědi zůstávají jen v prohlížeči kontrolora, stránka je nikam neposílá.
+
+Vzorek určuje kód (například `4821-10-0-Kopřivnice` = los 4821, 10 smluv, i bez dodatku, město Kopřivnice). Odkaz `…/#kontrola=<kód>` dá každému stejné smlouvy, takže dva lidé mohou zkontrolovat totéž nezávisle. Kód platí pro data z téhož sestavení; datum sestavení je v protokolu.
+
+**Co čekat – a co by znamenalo chybu:**
+
+| Otázka | Očekávání | Když to nesedí |
+|---|---|---|
+| smlouva, původní cena, počet navázaných dodatků | sedí skoro vždy – jsou opsané z registru | víc než 1 smlouva z 10 = chyba sběru nebo výpočtu |
+| konečná cena proti textu dodatku | odhad z polí registru; na 191 smlouvách s cenou přečtenou z textu trefil pásmo změny u 82 % | výrazně horší výsledek = síto z metadat je slabší, než tvrdíme |
+| úplnost | sběr našel 87 % smluv známých z exportů registru | výrazně míň nalezených = sběr má díru, kterou kontrola proti exportům neukázala |
+
+Zkouška 28. 11. 2026 na jedné smlouvě (Kopřivnice, Letní stadion – II. etapa): původní cena 18 969 309 Kč i dva navázané dodatky odpovídají záznamu v Registru smluv. Hlídač státu v seznamu dodatků ukazuje ceny s DPH (869 715 a 190 727 Kč), stránka počítá bez DPH – na to návod u kontroly upozorňuje.
+
 ## Zdroje dat
 
 | Kanál | K čemu | Omezení |
@@ -191,6 +211,7 @@ Stažené exporty leží v `data/rs/` zabalené (`.jsonl.gz`); před výpočtem 
 ## Známá slabá místa
 
 - **Plný sběr z otevřených dat registru se nepovedl.** Server `data.smlouvy.gov.cz` 25. 11. po zhruba 1,5 GB přenosů přestal odpovídat a 26. 11. shodil i dva souběžné přenosy do dvou minut. Stahování je zastavené. Plný sběr proto proběhl přes API Hlídače státu; pět stažených měsíců exportů slouží jako nezávislá kontrola jeho úplnosti.
+- **U 1 895 z 10 390 smluv plného sběru (18 %) je v registru jen cena s DPH.** Bere se jako původní cena a i práh 1 mil. Kč se u nich měří cenou s DPH. Když má dodatek takové smlouvy hodnotu bez DPH, vychází změna v procentech nižší. Karta ruční kontroly základ ceny u každé smlouvy uvádí.
 - **Sběr přes API nenajde zhruba 13 % stavebních smluv** – Hlídač je nevede v oboru stavebnictví, takže dotazu `oblast:stav` nevyhoví. API také nevrací starší verze záznamu (výchozí cena přepsaná městem vychází jako menší změna) a hodnota dodatku nemá znaménko.
 
 - **Čtení cen je vyladěné na kopřivnické šablony dodatků.** Tam se cena z textu shodla s registrem u 71 ze 72 dodatků, u jiných měst zatím jen u 73 z 87. Rozpory jsou vyřazené, takže vzorek ČR má méně smluv s jistou cenou (85 z 97).

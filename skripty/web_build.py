@@ -143,12 +143,15 @@ def zdroj_ceny(r):
 
 # Celostátní smlouvy z metadat registru – po řádcích, aby si je šlo na stránce zkontrolovat:
 # [ID verze (odkaz do registru), město, předmět, rok, typ města, kraj, pásmo obyvatel, původní cena, počet dodatků,
-#  změna % (0 = bez dodatku, null = dodatek bez zjistitelné ceny), druh, povaha, jak je cena zjištěna]
+#  změna % (0 = bez dodatku, null = dodatek bez zjistitelné ceny), druh, povaha, jak je cena zjištěna,
+#  ID smlouvy (na něj se váží dodatky – ruční kontrola podle něj otevře jejich seznam),
+#  základ původní ceny: 0 = v registru je cena bez DPH, 1 = jen cena s DPH (kontrolor musí vědět, se kterým polem srovnává)]
 cr = [[r["idv"], mesta.index(r["mesto"]), r["predmet"].replace("Smlouva o dílo - ", "").strip()[:90], int(r["datum"][:4]),
        KATEGORIE.index(r["kategorie"]), kraje.index(r["kraj"]), pasmo_mesta(OBCE[r["mesto_ico"]]["obyvatel"]), round(float(r["cena_puvodni"])),
        int(r["n_dod_navazanych"]) + int(r["n_dod_odhadnutych"]) + int(r["n_dod_prilohou"]),
        (0.0 if r["ma_dodatek"] == "0" else float(r["zmena_pct"]) if r["zmena_pct"] != "" else None),
-       SEZNAM_DRUHU.index(druh(r["predmet"])), SEZNAM_POVAH.index(povaha(r["predmet"])), zdroj_ceny(r)] for r in K]
+       SEZNAM_DRUHU.index(druh(r["predmet"])), SEZNAM_POVAH.index(povaha(r["predmet"])), zdroj_ceny(r),
+       r["ids"], int(r.get("zaklad_ceny") == "s")] for r in K]
 # Kolik měst už sběr přes API prošel. Soubor města vzniká i tehdy, když v registru nic nemá – typicky obce
 # II. typu, které smlouvy uveřejňovat nemusí. Konec sběru se proto pozná podle souborů, ne podle počtu měst
 # se smlouvou („mest“): ten zůstane hluboko pod 388 i po dokončení a stránka by pořád hlásila, že sběr běží.
