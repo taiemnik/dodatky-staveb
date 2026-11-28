@@ -149,7 +149,14 @@ cr = [[r["idv"], mesta.index(r["mesto"]), r["predmet"].replace("Smlouva o dílo 
        int(r["n_dod_navazanych"]) + int(r["n_dod_odhadnutych"]) + int(r["n_dod_prilohou"]),
        (0.0 if r["ma_dodatek"] == "0" else float(r["zmena_pct"]) if r["zmena_pct"] != "" else None),
        SEZNAM_DRUHU.index(druh(r["predmet"])), SEZNAM_POVAH.index(povaha(r["predmet"])), zdroj_ceny(r)] for r in K]
+# Kolik měst už sběr přes API prošel. Soubor města vzniká i tehdy, když v registru nic nemá – typicky obce
+# II. typu, které smlouvy uveřejňovat nemusí. Konec sběru se proto pozná podle souborů, ne podle počtu měst
+# se smlouvou („mest“): ten zůstane hluboko pod 388 i po dokončení a stránka by pořád hlásila, že sběr běží.
+SBER = KOREN / "data" / "rs_api2"
+sebrano = {k: sum(1 for o in OBCE.values() if o.get("kategorie") == k and (SBER / f"rs_{o['ico']}.jsonl.gz").exists())
+           for k in KATEGORIE}
 pokryti = {k: {"smluv": sum(1 for r in K if r["kategorie"] == k), "mest": len({r["mesto_ico"] for r in K if r["kategorie"] == k}),
+               "mest_sebrano": sebrano[k],
                "mest_celkem": sum(1 for o in OBCE.values() if o.get("kategorie") == k)} for k in KATEGORIE}
 
 # vzorek po smlouvách – bez názvu města, předmětu i odkazu:
@@ -184,7 +191,7 @@ DATA = {
     "meta": {"sestaveno": date.today().isoformat(), "mesto": MESTO, "prah_mesto": PRAH_MESTO, "rok_do": ROK_DO,
              "s_detailem": not BEZ_DETAILU, "presnost": presnost, "zdroj": "api" if "api" in KOHORTA else "exporty",
              "uplnost": uplnost,
-             "mest_v_datech": len({r["mesto_ico"] for r in K}), "mest_celkem": sum(1 for o in OBCE.values() if o.get("kategorie") in KATEGORIE), "mesice_exportu": sorted(Path(f).name[3:10] for f in glob.glob(str(KOREN / "data/rs/*.stat.json")))},
+             "mest_v_datech": len({r["mesto_ico"] for r in K}), "mest_sebrano": sum(sebrano.values()), "mest_celkem": sum(1 for o in OBCE.values() if o.get("kategorie") in KATEGORIE), "mesice_exportu": sorted(Path(f).name[3:10] for f in glob.glob(str(KOREN / "data/rs/*.stat.json")))},
     "vzorek": vzorek, "vz": vz, "mesto": mesto, "duvody": duvody, "druhy": SEZNAM_DRUHU, "povahy": SEZNAM_POVAH,
     "cr": cr, "kraje": kraje, "mesta": mesta, "kategorie": KATEGORIE, "pokryti": pokryti, "zdroje": ZDROJE, "pasma_mest": PASMA_MEST,
     "registr": dict(S),
